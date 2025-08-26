@@ -1,0 +1,1604 @@
+/* ========================================
+    Global Layout Constants & Transitions
+    ======================================== */
+:root {
+    --header-height: 64px;
+    --tab-button-height: 52px;
+    --padding-base: 1.5rem;
+    --border-radius-base: 12px;
+    --transition-speed: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+    Theme Definitions
+    ======================================== */
+
+/* AMOLED DARK THEME (Default) */
+:root,
+[data-theme="dark"],
+[data-theme="amoled-dark"] {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #111111;
+    --bg-hover: #1a1a1a;
+    --bg-active: #222222;
+
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --text-muted: #888888;
+
+    --accent-primary: #ffffff;
+    --accent-secondary: #f0f0f0;
+    --accent-hover: #f5f5f5;
+    --accent-active: #e0e0e0;
+    --accent-glow: rgba(255, 255, 255, 0.3);
+
+    --border: #333333;
+    --border-light: #2a2a2a;
+
+    --shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.05), 0 1px 2px rgba(255, 255, 255, 0.1);
+    --shadow-md: 0 4px 6px rgba(255, 255, 255, 0.1), 0 1px 3px rgba(255, 255, 255, 0.05);
+    --shadow-lg: 0 10px 25px rgba(255, 255, 255, 0.1), 0 5px 10px rgba(255, 255, 255, 0.05);
+
+    --success: #00ff00;
+    --warning: #ffff00;
+    --danger: #ff0000;
+    --info: #00ffff;
+
+    --gradient-primary: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+    --gradient-accent: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+}
+
+/* DEFAULT LIGHT THEME */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #e0e0e0;
+    --bg-hover: #d0d0d0;
+    --bg-active: #c0c0c0;
+
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+
+    --accent-primary: #000000;
+    --accent-secondary: #1a1a1a;
+    --accent-hover: #333333;
+    --accent-active: #555555;
+    --accent-glow: rgba(0, 0, 0, 0.3);
+
+    --border: #cccccc;
+    --border-light: #d0d0d0;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05);
+
+    --success: #008000;
+    --warning: #cc9900;
+    --danger: #cc0000;
+    --info: #006666;
+
+    --gradient-primary: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+    --gradient-accent: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+}
+
+
+/* ========================================
+    Base & Global Styles
+    ======================================== */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1rem;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+/* Ensure images and other media don't overflow their containers */
+img, video, iframe {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* General responsive utility to prevent elements from breaking layout */
+* {
+    box-sizing: border-box;
+}
+
+/* Specific adjustments for elements that might cause overflow */
+.page-content,
+.toolbar,
+.setlist-editor,
+.modal-content {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* ========================================
+    Header & Navigation
+    ======================================== */
+.app-header {
+    background-color: var(--bg-secondary);
+    padding: 0em 0 0em 0; /* Top/bottom padding for header content */
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background-color var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.header-top {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: 1.1rem;
+    margin-bottom: 0.4rem;
+    justify-content: space-between;
+    padding: 0.29rem 1.2rem 0.11rem 1.27rem;
+    gap: 1.2rem;
+}
+
+.theme-toggle-wrapper {
+    min-width: 120px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-left: 1.3rem;
+}
+
+.page-content, .tab {
+  overflow: visible !important;
+}
+
+.tab-toolbar {
+  width: 100%;
+  margin-top: 0.3em;
+  margin-bottom: 0.1em;
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  background: transparent; /* inherits header background */
+  /* Optional: soft divider line */
+  border-bottom: 1px solid var(--border, #222);
+  padding-bottom: 0.32em;
+  min-height: 2.5em;
+}
+
+
+.app-nav {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2.1rem;
+    padding: 0.29rem 0 0.03rem 0;
+    background: none;
+    box-shadow: none;
+    margin-bottom: 1em;
+    border: none;
+}
+
+
+.nav-button {
+    font-size: 1.11rem;
+    padding: 0.6rem 1.19rem 0.6rem 1.19rem;
+    border-radius: var(--border-radius-base);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    transition: background var(--transition-speed), color var(--transition-speed), box-shadow var(--transition-speed);
+    box-shadow: none;
+    margin-bottom: 0;
+    position: relative;
+    cursor: pointer;
+}
+
+.nav-button:hover {
+    background: var(--bg-hover);
+    color: var(--accent-hover);
+    box-shadow: 0 0 6px var(--accent-glow);
+}
+
+.nav-button.active {
+    color: var(--accent-primary);
+    background: var(--bg-active);
+    border-bottom: 2px solid var(--accent-primary);
+    font-weight: bold;
+    box-shadow: 0 0 7px var(--accent-glow), 0 0 0 var(--accent-glow);
+    z-index: 2;
+    font-size: 1rem;
+    transition: box-shadow var(--transition-speed), color var(--transition-speed), background var(--transition-speed), border-color var(--transition-speed);
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--accent-secondary, #aaa);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: color 0.22s, opacity 0.15s;
+}
+.icon-btn:hover, .icon-btn:focus {
+  color: var(--accent-primary, #fff);
+  opacity: 1;
+}
+
+.theme-icon-btn {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  background: none;
+  border: none;
+  color: var(--accent-secondary, #888);
+  cursor: pointer;
+  opacity: 0.82;
+  z-index: 100;
+  transition: color 0.22s, opacity 0.14s;
+}
+.theme-icon-btn:hover, .theme-icon-btn:focus {
+  color: var(--accent-primary, #fff);
+  opacity: 1;
+}
+
+
+/* ========================================
+    Media Queries (already structured, just apply new variables)
+    ======================================== */
+@media (max-width: 800px) {
+    .app-header {
+        padding: 0 0 0.5rem 0;
+    }
+    .header-top {
+	flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    .app-title {
+        font-size: 1.08rem;
+        padding-left: 0.2rem;
+    }
+    .app-nav {
+        gap: 1.1rem;
+        padding: 0.5rem 0 0 0;
+    }
+    .app-header {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0.75rem 0.5rem 0.5rem 0.5rem;
+    }
+    .app-nav {
+        gap: 1rem;
+    }
+    .app-title {
+        margin: 0.25rem 0;
+        font-size: 1.15rem;
+    }
+    .theme-toggle-wrapper {
+        margin-top: 0.4rem;
+        margin-bottom: 0.4rem;
+        justify-content: flex-end;
+    }
+}
+
+/* Tablet specific adjustments (768px - 1024px roughly) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .app-logo-text {
+        font-size: 1.8rem; /* Slightly smaller logo on tablets */
+    }
+    .app-nav {
+        gap: 1.5rem; /* Reduced gap for nav buttons */
+    }
+
+    .nav-button {
+        font-size: 1rem; /* Slightly smaller nav buttons */
+        padding: 0.5rem 1rem;
+    }
+
+    #tab-toolbar {
+        gap: 0.8rem; /* Reduced gap in toolbar */
+        padding: 0.6rem 1rem; /* Reduced padding in toolbar */
+    }
+
+    .search-input, .setlist-select, .btn {
+        font-size: 0.9rem; /* Smaller font size for inputs and buttons */
+        padding: 0.4rem 0.8rem; /* Smaller padding for inputs and buttons */
+    }
+
+    .setlist-select {
+        min-width: 10em; /* Adjust min-width for tablet select */
+        max-width: 18em; /* Adjust max-width for tablet select */
+    }
+
+    .setlist-editor {
+        gap: 1rem; /* Reduced gap between setlist columns */
+    }
+
+    .column {
+        padding: 1rem; /* Reduced padding in columns */
+    }
+
+    .song-item {
+        padding: 0.8rem; /* Reduced padding for song items */
+        font-size: 0.95rem; /* Slightly smaller font for song items */
+    }
+
+    .modal-content {
+        margin: 10% auto; /* Adjust modal margin for tablets */
+        padding: 1.5rem; /* Reduced modal padding */
+        max-width: 450px; /* Slightly smaller max-width for modals */
+    }
+
+    .modal-content h2 {
+        font-size: 1.3rem; /* Smaller modal title */
+    }
+
+    #song-title-input, #song-lyrics-input {
+        padding: 0.5rem; /* Smaller input padding in modals */
+        font-size: 0.95rem;
+    }
+
+    .modal-actions .btn {
+        padding: 0.4rem 0.8rem; /* Smaller modal button padding */
+        font-size: 0.9rem;
+    }
+
+    .performance-header {
+        padding: 0.3em 0.5em; /* Reduced padding in performance header */
+        font-size: 0.8em;
+    }
+
+    .performance-header h2,
+    .performance-header .song-info h2 {
+        font-size: 1.1em; /* Smaller song title in performance */
+    }
+
+    .lyrics-container {
+        font-size: 1.3rem; /* Adjusted base font size for lyrics on tablets */
+        padding: 1em 0.8em 1.5em 0.8em !important; /* Adjusted padding for lyrics */
+        line-height: 1.4 !important; /* Slightly more relaxed line-height for readability */
+    }
+
+    .nav-arrow {
+        font-size: 1.8rem; /* Slightly smaller nav arrows */
+        padding: 0.6rem 0.9rem;
+    }
+
+    .scroll-to-top-btn,
+    .auto-scroll-btn {
+        width: 48px; /* Smaller floating buttons */
+        height: 48px;
+        font-size: 1.4rem;
+        right: 2em; /* Adjust position */
+    }
+
+    .scroll-to-top-btn {
+        bottom: 100px; /* Adjust position */
+    }
+
+    .auto-scroll-btn {
+        bottom: 40px; /* Adjust position */
+    }
+
+    #font-size-slider.font-slider {
+        width: 250px !important; /* Smaller slider */
+        margin: 0 1em;
+    }
+
+    #theme-modal .modal-content {
+        min-width: 280px;
+        max-width: 380px;
+    }
+
+    #theme-modal .theme-btn {
+        min-width: 8em;
+        max-width: 8em;
+        font-size: 1.05em;
+        padding: 0.6em 0;
+    }
+}
+
+
+
+/* ========================================
+    Animations and Tab Content
+    ======================================== */
+.neon-pulse {
+    animation: neon-pulse 1.5s infinite alternate;
+}
+
+@keyframes neon-pulse {
+    from {
+        text-shadow: 0 0 10px var(--accent-primary); /* Uses accent primary */
+    }
+    to {
+        text-shadow: 0 0 20px var(--accent-primary), 0 0 30px var(--accent-primary);
+    }
+}
+
+.tab {
+    display: none;
+}
+
+.tab.active {
+    display: block;
+}
+
+.page-content {
+    padding: var(--padding-base); /* Using base padding */
+}
+
+/* ========================================
+    Toolbar and Buttons
+    ======================================== */
+.toolbar {
+    display: flex;
+    gap: var(--padding-base); /* Using base padding for gap */
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+/* Group wrapper for toolbar buttons */
+.toolbar-buttons-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.search-input, .setlist-select {
+    flex-grow: 1;
+    padding: 0.5rem;
+    background-color: var(--bg-tertiary); /* Inputs use tertiary background */
+    color: var(--text-primary);
+    border: 1px solid var(--border); /* Input borders use main border */
+    border-radius: var(--border-radius-base); /* Using base border radius */
+    transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.search-input::placeholder {
+    color: var(--text-muted); /* Placeholder text uses muted text color */
+}
+
+.btn {
+    background-color: var(--accent-primary); /* Buttons use accent primary */
+    color: var(--bg-primary); /* Text on buttons should contrast, using bg-primary for dark themes */
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--border-radius-base); /* Using base border radius */
+    cursor: pointer;
+    transition: background-color var(--transition-speed), color var(--transition-speed), box-shadow var(--transition-speed);
+    box-shadow: var(--shadow-sm); /* Adding a subtle shadow to buttons */
+}
+
+.btn:hover {
+    background-color: var(--accent-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+    background-color: var(--accent-active);
+}
+
+.btn.danger {
+    background-color: var(--danger); /* Danger button uses danger color */
+    color: var(--text-primary); /* Ensure contrast on danger button */
+}
+.btn.danger:hover {
+    background-color: darken(var(--danger), 10%); /* Subtle darken on hover for danger */
+}
+
+.hidden-file {
+    /* Modified to work better on mobile devices */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    opacity: 0.01; /* Not completely invisible to ensure it's clickable */
+    pointer-events: auto; /* Ensure it can receive clicks */
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ========================================
+    Song List and Setlist Editor
+    ======================================== */
+.song-list {
+    list-style: none;
+    padding: 0;
+}
+
+.song-item {
+    background-color: var(--bg-tertiary); /* Song items use tertiary background */
+    padding: 0.7rem 1rem; /* Reduced vertical padding */
+    margin-bottom: 0.3rem; /* Reduced margin between items */
+    border-radius: var(--border-radius-base); /* Using base border radius */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-light); /* Lighter border for song items */
+    box-shadow: var(--shadow-sm);
+    transition: background-color var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.song-item:hover {
+    background-color: var(--bg-hover);
+}
+
+.setlist-editor {
+    display: flex;
+    gap: 0.8rem; /* Reduced gap for a tighter look */
+}
+
+.column {
+    flex: 1;
+    background-color: var(--bg-secondary); /* Columns use secondary background */
+    padding: 0.8rem; /* Reduced padding */
+    border-radius: var(--border-radius-base); /* Using base border radius */
+    min-height: 250px; /* Slightly reduced min-height */
+    border: 1px solid var(--border); /* Column borders use main border */
+    box-shadow: var(--shadow-md); /* Adding shadow to columns */
+    transition: background-color var(--transition-speed), border-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.song-container {
+    min-height: 180px; /* Reduced min-height for song containers */
+}
+
+/* ========================================
+    Performance Mode
+    ======================================== */
+.performance-mode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-primary); /* Overlay uses primary background */
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    transition: background-color var(--transition-speed);
+}
+
+.performance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--bg-secondary); /* Performance header uses secondary background */
+    border-bottom: 1px solid var(--border);
+    transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.lyrics-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    font-size: 1.5rem; /* Base size, slider still works */
+    padding: 2rem;
+    text-align: center;
+    line-height: 1.6;
+    color: var(--text-primary); /* Lyrics use primary text color */
+    transition: color var(--transition-speed);
+}
+
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-secondary, #222); /* Subtle background */
+    color: var(--accent-secondary, #888);   /* From theme, less “clowny” */
+    border: none;
+    font-size: 2.1rem;
+    cursor: pointer;
+    padding: 0.7rem 1rem;
+    border-radius: var(--border-radius-base, 10px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    opacity: 0.75;
+    transition: background 0.22s, color 0.15s, opacity 0.22s;
+    z-index: 1010;
+}
+
+.nav-arrow:hover, .nav-arrow:focus {
+    background: var(--bg-hover, #333);
+    color: var(--accent-primary, #fff);   /* Highlight only on hover */
+    opacity: 1;
+}
+
+.nav-arrow.left { left: 0.5em; }
+.nav-arrow.right { right: 0.5em; }
+
+/* ========================================
+    Modal Styling
+    ======================================== */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 20010;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.is-open {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg-primary);
+    margin: 8% auto;
+    padding: 2.2rem 2.2rem 1.2rem 2.2rem;
+    border: 2px solid var(--accent-primary);
+    width: 94vw;
+    max-width: 400px;
+    border-radius: 24px;
+    box-shadow: 0 0 32px 2px var(--accent-glow), 0 4px 40px 8px #000b;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: stretch;
+    animation: neon-modal-pop 0.44s cubic-bezier(0.6,0,0.2,1);
+}
+
+@keyframes neon-modal-pop {
+    from { opacity: 0; transform: scale(0.9); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.modal-content h2 {
+    margin: 0 0 0.5rem 0;
+    color: var(--accent-primary);
+    text-align: center;
+    font-size: 1.5rem;
+    text-shadow: 0 0 14px var(--accent-primary);
+}
+
+#song-title-input, #song-lyrics-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    transition: border-color 0.2s;
+}
+
+#song-title-input:focus, #song-lyrics-input:focus {
+    border-color: var(--accent-primary);
+    outline: none;
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+#song-lyrics-input {
+    min-height: 6rem;
+    max-height: 28vh;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+}
+
+.modal-actions .btn {
+    flex: 1 1 auto;
+    margin: 0;
+}
+
+/* Add these styles to your existing CSS */
+
+/* Toast notifications */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-success {
+    background-color: #10b981;
+}
+
+.toast-error {
+    background-color: #ef4444;
+}
+
+/* Improved setlist editor layout */
+.setlist-editor {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px; /* Reduced gap */
+    margin-top: 16px; /* Reduced margin */
+    align-items: stretch; /* columns match height */
+}
+.setlist-editor .column {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 100%;
+    min-height: 0;
+    background: var(--surface-color);
+    border-radius: 8px;
+    padding: 12px; /* Reduced padding */
+    border: 1px solid var(--border-color);
+}
+.setlist-editor .column h3 {
+    margin: 0 0 12px 0; /* Reduced margin */
+    color: var(--text-primary);
+    font-size: 1.1rem;
+}
+
+/* Enhanced song items in setlist editor */
+.song-container .song-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px; /* Reduced padding for song items */
+    margin-bottom: 6px; /* Reduced margin between song items */
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.song-container .song-item:hover {
+    border-color: var(--accent-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.song-container .song-item .song-number {
+    background: var(--accent-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.song-container .song-item .song-title {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.song-container .song-item .song-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.song-container .song-item .song-controls .btn {
+    padding: 6px;
+    min-width: auto;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.song-container .song-item .song-controls .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Empty state messages */
+.empty-message {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 40px 20px;
+    margin: 0;
+}
+
+/* Disabled button states */
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Better toolbar spacing */
+.toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0px 20px 0px 20px
+}
+
+.setlist-select {
+  min-width: 14em;
+  max-width: 80%;
+  width: auto;
+  font-size: 0.9em;
+  padding: 0.37em 1.1em;
+  border-radius: var(--border-radius-base, 8px);
+  background: var(--bg-tertiary, #181818);
+  color: var(--text-secondary, #fff);
+  border: 1.5px solid var(--border, #333);
+  margin-right: 0.16em;
+}
+
+
+/* Responsive setlist editor */
+@media (max-width: 600px) {
+    .setlist-editor {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .toolbar {
+    margin-bottom: 0.2rem;
+    }
+
+    .toolbar .setlist-select {
+        min-width: none;
+        max-width: none;
+        width: 100%;
+    }
+
+    .toolbar-buttons-group {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+    }
+
+    .toolbar-buttons-group > .btn,
+    .toolbar-buttons-group > label.btn {
+        flex: 1 1 0;
+        text-align: center;
+    }
+    
+    .song-container .song-item .song-controls {
+        flex-direction: column;
+        gap: 2px;
+    }
+    
+    .song-container .song-item .song-controls .btn {
+        width: 2.2em;
+        height: 2.2em;
+        font-size: 0.85rem;
+    }
+    .icon-btn {
+        background: none;
+        border: none;
+        font-size: 0.9rem;
+        color: var(--accent-secondary, #aaa);
+        cursor: pointer;
+        opacity: 0.85;
+        transition: color 0.22s, opacity 0.15s;
+    }
+    .drag-handle {
+        cursor: grab;
+        font-size: 1.3em;
+        opacity: 0.6;
+        margin-right: 1px;
+        user-select: none;
+        transition: opacity 0.15s;
+    }
+}
+
+@media (max-width: 480px) {
+    .icon-btn {
+        background: none;
+        border: none;
+        font-size: 0.9rem;
+        color: var(--accent-secondary, #aaa);
+        cursor: pointer;
+        opacity: 0.85;
+        transition: color 0.22s, opacity 0.15s;
+    }
+    .song-actions {
+    	font-size: 1rem;
+        align-items: center;
+        position: absolute;
+        right: 2rem;
+    }
+   .song-item .drag-handle { flex: 0 0 auto; }   /* ensure handle never expands */
+   .song-item .song-title {
+       flex: 1 1 auto;
+       white-space: nowrap;
+       overflow: hidden;
+       text-overflow: ellipsis;
+       max-width: 15rem;
+    }
+     .nav-button {
+       font-size: .8rem;
+    }
+    
+    .nav-button.active {
+       font-size: .8rem;
+       
+    }
+     .app-nav {
+       font-size: .8rem;
+       padding: 0.6rem 1.19rem 0.6rem 1.19rem;
+    }
+     .drag-handle {
+        cursor: grab;
+        font-size: 1.3em;
+        opacity: 0.6;
+        margin-right: 1px;
+        user-select: none;
+        transition: opacity 0.15s;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Make setlist editor buttons smaller */
+#current-setlist-songs .song-item .btn,
+#available-songs .song-item .btn {
+    padding: 0.15em 0.35em;
+    font-size: 0.8em;
+    min-width: 24px;
+    min-height: 24px;
+    line-height: 1;
+    border-radius: 6px;
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+#current-setlist-songs .song-item .btn i,
+#available-songs .song-item .btn i {
+    font-size: 1em;
+}
+.drag-handle {
+    cursor: grab;
+    font-size: 1.3em;
+    opacity: 0.6;
+    margin-right: 10px;
+    user-select: none;
+    transition: opacity 0.15s;
+}
+.song-item:active .drag-handle,
+.song-item .drag-handle:active {
+    opacity: 1;
+}
+.drag-ghost {
+    opacity: 0.7 !important;
+    background: var(--accent-glow) !important;
+}
+
+.performance-header {
+    padding: 0.45em 0.65em;
+    font-size: 0.88em;
+    min-height: unset;
+}
+
+.performance-header h2,
+.performance-header .song-info h2 {
+    margin: 0;
+    font-size: 1.25em;
+    line-height: 1.1;
+    font-weight: bold;
+}
+
+.performance-controls {
+    gap: 0.4em;
+}
+
+#performance-song-info h2 {
+    font-size: 1.13em;
+    margin-bottom: 0.15em;
+}
+
+#font-size-slider.font-slider {
+    width: 350px !important;    /* Make it nice and long */
+    accent-color: var(--accent-primary, #00bcd4);
+    height: 20px;
+    margin: 0 1.5em;
+    background: var(--bg-tertiary, #222);
+    border-radius: 8px;
+}
+.performance-header label[for="font-size-slider"] {
+    display: none;
+}
+
+#exit-performance-btn,
+#toggle-theme-btn {
+    padding: 0.1em 0.45em;
+    font-size: 1em;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+.lyrics-container {
+    line-height: 1.05 !important;  /* Super tight but still readable */
+    /* font-size: 1.5rem; */              /* Base size, slider still works */
+    padding: 0.8em 0.5em 1.2em 0.5em !important;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+    white-space: pre-line;
+}
+
+
+.setlist-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+}
+
+.setlist-actions .btn {
+  /* Make buttons round, icon-only, tight padding */
+  min-width: 2.2em;
+  max-width: 2.2em;
+  height: 2.2em;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.1em;
+  border-radius: 50%;
+  background: var(--bg-tertiary, #222);
+  color: var(--accent-primary, #fff);
+  box-shadow: var(--shadow-sm);
+  transition: background 0.14s, color 0.14s, box-shadow 0.14s;
+  cursor: pointer;
+  margin: 0 0.06em;
+  opacity: 0.95;
+}
+.setlist-actions .btn:hover,
+.setlist-actions .btn:focus {
+  background: var(--bg-hover, #444);
+  color: var(--accent-hover, #f0f0f0);
+}
+
+.setlist-actions .btn.danger {
+  background: var(--danger, #ff0000);
+  color: #fff;
+}
+.setlist-actions .btn.danger:hover {
+  background: #d00000;
+}
+
+.setlist-song-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1em;
+  padding: 0.22em 0.6em 0.22em 0.9em;
+  border-radius: var(--border-radius-base, 8px);
+  background: var(--bg-secondary, #111);
+  margin-bottom: 0.2em;
+  font-size: 1.06em;
+}
+.setlist-song-item span {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Allow more natural shrink on smaller tablets */
+@media (max-width: 900px) {
+    .toolbar, .setlist-editor {
+        gap: 0.4rem;
+    }
+    .setlist-editor > .column {
+        flex: 1 1 45%;
+    }
+}
+
+#song-modal,
+#setlist-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.8) !important;
+}
+
+/* Optional: Only show auto-scroll button in performance mode */
+#performance-mode[style*="display: flex"] .auto-scroll-btn {
+    display: flex !important;
+}
+#performance-mode:not([style*="display: flex"]) .auto-scroll-btn,
+#performance-mode[style*="display: none"] .auto-scroll-btn {
+    display: none !important;
+}
+
+.lyrics-container, #lyrics-content {
+    line-height: 1.33 !important;    /* Pick 1.28-1.38 as best for you */
+    letter-spacing: 0.01em;
+    word-break: break-word;
+    white-space: pre-line;           /* Preserves stanza breaks, trims crazy spacing */
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+#autoscroll-delay-label {
+  margin-right: 0.5em;
+  font-weight: 500;
+  color: var(--text-secondary, #aaa);
+}
+#autoscroll-delay-slider {
+  margin-right: 0.8em;
+}
+
+#autoscroll-delay-modal {
+  z-index: 20000 !important;
+}
+#autoscroll-delay-modal .modal-content {
+  position: relative;
+  z-index: 20001;
+  background: var(--bg-primary, #222);
+}
+
+/* Stack both buttons on the right side with spacing */
+.scroll-to-top-btn,
+.auto-scroll-btn {
+  position: fixed;
+  right: 2.7em;   /* Move farther right, more padding from lyrics */
+  z-index: 2020;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent-primary, #00bcd4);
+  color: var(--bg-primary, #111);
+  border: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.23);
+  font-size: 1.55rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.93;
+  transition: background 0.22s, opacity 0.14s, color 0.14s;
+}
+
+/* Top button (scroll to top) */
+.scroll-to-top-btn {
+  bottom: 120px; /* 52px (auto-scroll height) + 16px gap + a little extra for thumb reach */
+}
+
+/* Bottom button (autoscroll) */
+.auto-scroll-btn {
+  bottom: 52px;
+  display: flex !important; /* Make sure it always shows in performance mode */
+}
+
+/* No color change when active/focused */
+.scroll-to-top-btn:active,
+.scroll-to-top-btn:focus,
+.scroll-to-top-btn:focus-visible,
+.auto-scroll-btn:active,
+.auto-scroll-btn:focus,
+.auto-scroll-btn:focus-visible {
+  background: var(--accent-primary) !important;
+  color: var(--bg-primary) !important;
+  outline: none !important;
+}
+
+.scroll-to-top-btn i,
+.auto-scroll-btn i {
+  color: inherit !important;
+}
+
+/* Hide both buttons by default */
+.scroll-to-top-btn,
+.auto-scroll-btn {
+  display: none !important;
+}
+
+/* Show both buttons ONLY when performance mode is visible */
+#performance-mode[style*="display: flex"] ~ .scroll-to-top-btn,
+#performance-mode[style*="display: flex"] ~ .auto-scroll-btn {
+  display: flex !important;
+}
+
+.scroll-to-top-btn.invisible {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.18s;
+}
+.scroll-to-top-btn {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.18s;
+}
+
+.song-progress {
+  font-size: 1.02em;
+  color: var(--accent-secondary, #aaa);
+  margin-top: 0.1em;
+  margin-bottom: 0.4em;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+  text-align: left;
+  font-family: inherit;
+}
+
+#theme-modal {
+  z-index: 20000 !important;
+}
+#theme-modal .modal-content {
+  z-index: 20100 !important;
+  min-width: 320px;
+  max-width: 420px;
+  margin: 0 auto;
+  margin-top: 4vh !important;    /* Gives a 4% vertical gap from the top */
+  border-radius: 18px;
+}
+#theme-modal .theme-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7em;
+  justify-content: center;
+  margin-bottom: 1.2em;
+}
+#theme-modal .theme-btn {
+  padding: 0.7em 1.5em;
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 14px;
+  font-size: 1.13em;
+  font-weight: bold;
+  box-shadow: 0 2px 12px var(--accent-glow, rgba(0,0,0,0.13));
+  transition: background 0.18s, color 0.18s, transform 0.15s;
+  cursor: pointer;
+  margin: 0.17em 0.29em;
+  outline: none;
+}
+
+#theme-modal .theme-btn {
+  min-width: 9.4em;
+  max-width: 9.4em;
+  text-align: center;
+  justify-content: center;
+  padding: 0.72em 0;
+  font-size: 1.13em;
+  font-weight: bold;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  margin: 0.17em 0.29em;
+}
+
+
+#theme-modal .theme-btn:hover, #theme-modal .theme-btn:focus {
+  background: var(--accent-hover, #fff);
+  color: var(--accent-primary, #222);
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px var(--accent-glow, rgba(0,0,0,0.23));
+}
+#theme-modal .theme-btn:active {
+  background: var(--accent-active, #bbb);
+  color: var(--accent-primary, #222);
+  transform: scale(0.97);
+}
+#close-theme-modal.btn {
+  background: var(--danger, #ff0044);
+  color: #fff;
+  border-radius: 14px;
+  font-weight: bold;
+  font-size: 1.09em;
+  margin-top: 1.1em;
+  transition: background 0.18s, color 0.18s, transform 0.14s;
+  box-shadow: 0 0 13px 2px #9006, 0 0 0 var(--accent-glow);
+  letter-spacing: 0.02em;
+}
+#close-theme-modal.btn:hover,
+#close-theme-modal.btn:focus {
+  background: #fff;
+  color: var(--danger, #d00020);
+  box-shadow: 0 0 24px 4px var(--danger, #d00020), 0 0 0 var(--accent-glow);
+  transform: scale(1.03);
+}
+
+/* === Custom colors for each theme button in the theme picker === */
+#theme-modal .theme-btn[data-theme="default-dark"] {
+  background: #191b1f;
+  color: #fff;
+  border: 1.5px solid #333;
+}
+#theme-modal .theme-btn[data-theme="default-light"] {
+  background: #fff;
+  color: #222;
+  border: 1.5px solid #bbb;
+}
+#theme-modal .theme-btn[data-theme="blue-dark"] {
+  background: #072366;
+  color: #fff;
+  border: 1.5px solid #369;
+}
+#theme-modal .theme-btn[data-theme="blue-light"] {
+  background: #e8f2ff;
+  color: #0051a8;
+  border: 1.5px solid #7bb5ff;
+}
+#theme-modal .theme-btn[data-theme="red-dark"] {
+  background: #720606;
+  color: #fff;
+  border: 1.5px solid #ff2c2c;
+}
+#theme-modal .theme-btn[data-theme="red-light"] {
+  background: #ffe6e6;
+  color: #b80000;
+  border: 1.5px solid #e98282;
+}
+
+/* Keep hover/focus states consistent, but boost border on focus */
+#theme-modal .theme-btn:hover,
+#theme-modal .theme-btn:focus {
+  outline: 2.5px solid var(--accent-primary, #fff);
+  outline-offset: 1px;
+  border-color: var(--accent-primary, #fff) !important;
+  box-shadow: 0 0 18px 2px var(--accent-glow, #fff4);
+  transform: scale(1.09);
+}
+
+/* === HIGH-CONTRAST ACTIVE TAB FOR ALL THEMES === */
+.app-nav .nav-button.active {
+  background: linear-gradient(
+    135deg, 
+    var(--accent-primary, #fff) 80%, 
+    var(--accent-hover, #f0f0f0) 100%
+  );
+  color: var(--bg-primary, #000);
+  border-bottom: 3.5px solid var(--accent-primary, #fff);
+  font-weight: bold;
+  box-shadow: 0 0 14px 3px var(--accent-glow, #fff7), 0 0 2px var(--accent-primary, #fff);
+  filter: brightness(1.08) contrast(1.12);
+  z-index: 2;
+  font-size: 1.04em;
+  transition: background 0.18s, color 0.18s, transform 0.14s;
+}
+ 
+
+
+/* For smaller screens, go even smaller */
+@media (max-width: 700px) {
+  .main-logo-img {
+      max-height: 55px;
+      margin-top: 0.25em;
+      margin-bottom: 0.22em;
+  }
+}
+
+/* If you ever want to tweak even further on the tiniest phones */
+@media (max-width: 500px) {
+  .main-logo-img {
+      max-height: 38px;
+  }
+}
+
+@media (max-width: 800px) {
+  .header-top {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+}
+
+/* Ensure tab content also stretches to fill, if necessary */
+.tab.active {
+    display: flex; /* Change from block to flex to ensure content stretches */
+    flex-direction: column;
+    flex-grow: 1; /* Allow active tab to grow and fill space */
+}
+
+.page-content {
+    flex-grow: 1; /* Allow page content to grow */
+    display: flex;
+    flex-direction: column;
+    /* Ensure padding doesn't cause overflow */
+    box-sizing: border-box;
+    padding: var(--padding-base); /* Keep your padding */
+}
+
+/* ========================================
+    Media Queries (Corrected)
+    ======================================== */
+
+/* Tablet and Phone Adjustments (max-width: 800px) */
+@media (max-width: 800px) {
+    .app-header {
+        padding: 0 0 0.5rem 0;
+    }
+    
+    /* === LOGO CENTERING FIX === */
+    /* We must set .header-top to 100% width on mobile/tablet 
+       to allow the logo to center correctly across the full screen. 
+       The existing 70% rule was the root cause. */
+    .header-top {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        width: 100% !important; 
+        padding: 0 !important;
+    }
+
+    .app-title {
+        font-size: 1.08rem;
+        padding-left: 0.2rem;
+    }
+    /* ... (rest of the existing 800px media query styles) ... */
+    
+    /* Remove any redundant @media (max-width: 800px) block that might be at the end of the file */
+}
+
+
+/* === BACKGROUND VOID FIX === */
+/* Ensure the main content containers fill the available height */
+.tab.active {
+    /* Change display from 'block' to 'flex' and allow it to stretch */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; 
+}
+
+.page-content {
+    /* Ensure the page content also fills its container */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--padding-base); 
+}
+
+html, body {
+  height: 100%;
+  min-height: 100vh;
+  background: var(--bg-primary, #000) !important;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.main-box { /* Add this new rule for .main-box */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensure it's at least viewport height */
+    flex-grow: 1; /* Allow it to grow and fill space */
+}
+
+main { /* Add this new rule for main */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allow main content area to grow */
+}
+
+.tab.active {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.page-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--padding-base);
+}
+html, body {
+  height: 100%;
+  min-height: 100vh;
+  background: var(--bg-primary, #000) !important;
+}
+
+#bg-filler {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-primary, #000); /* Or use any color you want */
+  z-index: 0;
+  pointer-events: none;
+}
+
+.main-box {
+  position: relative;
+  z-index: 1;
+}
+html, body {
+  background: var(--bg-primary, #000) !important;
+  min-height: 100vh;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--accent-secondary, #888);
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.82;
+  z-index: 100;
+  transition: color 0.22s, opacity 0.14s;
+}
+.theme-toggle-btn:hover, .theme-toggle-btn:focus {
+  color: var(--accent-primary, #fff);
+  opacity: 1;
+}
+

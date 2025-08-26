@@ -1,0 +1,346 @@
+/* Performance Mode Styles */
+.performance-mode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-primary);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    transition: background-color var(--transition-speed);
+}
+
+.performance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.45em 0.65em;
+    font-size: 0.88em;
+    min-height: unset;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.performance-header h2,
+.performance-header .song-info h2 {
+    margin: 0;
+    font-size: 1.25em;
+    line-height: 1.1;
+    font-weight: bold;
+}
+
+.performance-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    justify-content: flex-end;
+    margin-right: 0.35em;
+}
+
+.performance-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: 0.45em 0.65em;
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    z-index: 2025;
+    transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.performance-controls .icon-btn,
+.performance-footer .icon-btn {
+    background: var(--bg-tertiary, #1a1a1a);
+    color: var(--accent-primary, #fff);
+    border: none;
+    border-radius: 50%;
+    width: 2.1em;
+    height: 2.1em;
+    font-size: 1.25em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.08);
+    transition: background 0.14s, color 0.16s, box-shadow 0.13s, transform 0.15s;
+    cursor: pointer;
+    margin: 0 0.06em;
+    opacity: 0.95;
+}
+
+.performance-controls .icon-btn:hover,
+.performance-controls .icon-btn:focus,
+.performance-footer .icon-btn:hover,
+.performance-footer .icon-btn:focus {
+    background: var(--accent-hover, #fff);
+    color: var(--accent-primary, #222);
+    box-shadow: 0 2px 16px var(--accent-glow, #fff8);
+    transform: scale(1.13);
+    opacity: 1;
+}
+
+.performance-controls .icon-btn.danger,
+.performance-controls .icon-btn[title*="Exit"],
+.performance-footer .icon-btn.danger,
+.performance-footer .icon-btn[title*="Exit"] {
+    background: var(--danger, #ef4444);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(255,0,0,0.10);
+}
+
+.performance-controls .icon-btn.danger:hover,
+.performance-controls .icon-btn.danger:focus,
+.performance-controls .icon-btn[title*="Exit"]:hover,
+.performance-controls .icon-btn[title*="Exit"]:focus,
+.performance-footer .icon-btn.danger:hover,
+.performance-footer .icon-btn.danger:focus,
+.performance-footer .icon-btn[title*="Exit"]:hover,
+.performance-footer .icon-btn[title*="Exit"]:focus {
+    background: #fff;
+    color: var(--danger, #ef4444);
+    box-shadow: 0 0 20px 2px var(--danger, #ef4444), 0 0 8px var(--accent-glow, #fff3);
+}
+
+
+.performance-controls .icon-btn:active,
+.performance-footer .icon-btn:active {
+    transform: scale(0.96);
+}
+
+.performance-controls .icon-btn i,
+.performance-footer .icon-btn i {
+    font-size: 1.06em;
+}
+
+.lyrics-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    line-height: 1.33;
+    letter-spacing: 0.01em;
+    word-break: break-word;
+    white-space: pre-line;
+    padding: 0.8em 0.5em 1.2em 0.5em;
+    text-align: center;
+    max-width: 100%;
+    margin: 0 auto;
+    color: var(--text-primary);
+    transition: color var(--transition-speed);
+}
+
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-secondary, #222);
+    color: var(--accent-secondary, #888);
+    border: none;
+    font-size: 2.1rem;
+    cursor: pointer;
+    padding: 0.7rem 1rem;
+    border-radius: var(--border-radius-base, 10px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    opacity: 0.75;
+    transition: background 0.22s, color 0.15s, opacity 0.22s;
+    z-index: 1010;
+}
+
+.nav-arrow:hover,
+.nav-arrow:focus {
+    background: var(--bg-hover, #333);
+    color: var(--accent-primary, #fff);
+    opacity: 1;
+}
+
+.nav-arrow.left { left: 0.5em; }
+.nav-arrow.right { right: 0.5em; }
+
+.song-progress {
+    font-size: 1.02em;
+    color: var(--accent-secondary, #aaa);
+    margin-top: 0.1em;
+    margin-bottom: 0.4em;
+    letter-spacing: 0.06em;
+    opacity: 0.75;
+    text-align: left;
+    font-family: inherit;
+}
+
+.scroll-to-top-btn,
+.auto-scroll-btn {
+    position: fixed;
+    right: 2.7em;
+    z-index: 2020;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--accent-primary, #00bcd4);
+    color: var(--bg-primary, #111);
+    border: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.23);
+    font-size: 1.55rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.93;
+    transition: background 0.22s, opacity 0.14s, color 0.14s;
+}
+
+.scroll-to-top-btn {
+    bottom: 176px;
+}
+
+.auto-scroll-btn {
+    bottom: 108px;
+    display: flex;
+}
+
+.scroll-to-top-btn:active,
+.scroll-to-top-btn:focus,
+.scroll-to-top-btn:focus-visible,
+.auto-scroll-btn:active,
+.auto-scroll-btn:focus,
+.auto-scroll-btn:focus-visible {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    outline: none;
+}
+
+.scroll-to-top-btn i,
+.auto-scroll-btn i {
+    color: inherit;
+}
+
+.scroll-to-top-btn.invisible {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s;
+}
+
+.scroll-to-top-btn {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.18s;
+}
+
+#autoscroll-settings-btn i {
+    color: var(--accent-primary, #fff);
+}
+
+#autoscroll-delay-modal,
+#performance-menu-modal,
+#perf-metadata-modal {
+    z-index: 20050;
+    background: rgba(0,0,0,0.82);
+}
+
+#autoscroll-delay-modal .modal-content,
+#performance-menu-modal .modal-content,
+#perf-metadata-modal .modal-content {
+    z-index: 20051;
+    background: var(--bg-primary, #222);
+}
+
+#autoscroll-delay-label {
+    margin-right: 0.5em;
+    font-weight: 500;
+    color: var(--text-secondary, #aaa);
+}
+
+#autoscroll-delay-slider {
+    margin-right: 0.8em;
+}
+
+#font-size-slider.font-slider {
+    width: 350px;
+    accent-color: var(--accent-primary, #00bcd4);
+    height: 20px;
+    margin: 0 1.5em;
+    background: var(--bg-tertiary, #222);
+    border-radius: 8px;
+}
+
+.performance-header label[for="font-size-slider"] {
+    display: none;
+}
+
+/* Mobile-First Responsive Styles */
+@media (max-width: 600px) {
+    .scroll-to-top-btn,
+    .auto-scroll-btn {
+      position: fixed;
+      right: 1.3rem;
+      z-index: 2020;
+      width: 37px;
+      height: 37px;
+      border-radius: 50%;
+      background: var(--accent-primary, #00bcd4);
+      color: var(--bg-primary, #111);
+      border: none;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.23);
+      font-size: 1.1rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.93;
+      transition: background 0.22s, opacity 0.14s, color 0.14s;
+    }
+    .scroll-to-top-btn {
+      bottom: 156px;
+    }
+
+    .auto-scroll-btn {
+      bottom: 108px;
+      display: flex;
+    }
+
+    .performance-controls .icon-btn,
+    .performance-footer .icon-btn {
+      width: 2em;
+      height: 2em;
+      font-size: 1rem;
+   }
+}
+
+.modal-content .modal-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin: 0.4rem 0;
+}
+.modal-content .modal-row > label { min-width: 9em; }
+.modal-content select, .modal-content input, .modal-content textarea {
+  width: 100%;
+  background: var(--bg-tertiary); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem;
+}
+.metadata-row { display: flex; gap: 0.6rem; align-items: center; margin: 0.4rem 0; }
+.metadata-row > label { min-width: 9em; }
+.meta-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 0.8rem; }
+
+/* Compact metadata line under title */
+.performance-header .song-meta-line {
+  font-size: 0.95em; color: var(--accent-secondary, #aaa); margin-top: 0.15em;
+  letter-spacing: 0.02em;
+}
+.performance-header .song-meta-line .notes-icon {
+  margin-left: 0.4em; cursor: pointer; opacity: 0.85;
+}
+.performance-header .song-meta-line .notes-icon:hover { opacity: 1; }
+
+.lyrics-line-group { margin-bottom: 0.35em; }
+.lyric-text,
+.chord-line { text-align: left; }
+.chord-line {
+  white-space: pre;
+  font-size: 0.75em;
+  color: var(--text-muted, #888);
+}
+.section-label { margin-top: 0.6em; font-weight: bold; }

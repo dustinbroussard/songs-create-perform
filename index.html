@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Hill Rd. Setlist Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" href="assets/icons/icon-192x192.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="lib/mammoth.browser.min.js"></script>
+</head>
+<body>
+<div class="main-box">
+ <header class="app-header">
+  <div class="header-top">
+    <div class="app-logo">
+  <img src="assets/images/mylogo.png" alt="App Logo" class="app-logo-img">
+</div>
+  <button id="theme-toggle-btn" class="icon-btn theme-toggle-btn" title="Toggle Light/Dark" style="position:absolute;top:1.1rem;right:1.1rem;">
+  <i class="fas fa-adjust"></i>
+</button>
+   
+  </div>
+  <nav class="app-nav" aria-label="Main tabs">
+    <button type="button" class="nav-button active" data-tab="songs" aria-label="Songs tab">
+      <i class="fas fa-book"></i> Songs
+    </button>
+    <button type="button" class="nav-button" data-tab="setlists" aria-label="Setlists tab">
+      <i class="fas fa-list"></i> Setlists
+    </button>
+    <button type="button" class="nav-button" data-tab="performance" aria-label="Performance tab">
+      <i class="fas fa-music"></i> Lyrics
+    </button>
+  </nav>
+<div id="tab-toolbar" class="toolbar"></div>
+</header>
+    <main id="app">
+        <section id="songs" class="tab active">
+            <div class="page-content songs-page">
+                <div id="song-list" class="song-list"></div>
+            </div>
+        </section>
+
+        <section id="setlists" class="tab">
+            <div class="page-content setlists-page">
+                    
+                <div class="setlist-editor">
+                    <div class="column">
+                        <h3>Available Songs</h3>
+                        <div id="available-songs" class="song-container"></div>
+                    </div>
+                    <div class="column">
+                        <h3 id="current-setlist-title">Current Setlist</h3>
+                        <div id="current-setlist-songs" class="song-container"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="performance" class="tab">
+            <div class="page-content performance-page">
+                <div id="performance-song-list" class="song-list"></div>
+            </div>
+        </section>
+    </main>
+    <div id="song-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="song-modal-title">Add Song</h2>
+            <input type="text" id="song-title-input" placeholder="Song Title">
+            <textarea id="song-lyrics-input" placeholder="Enter lyrics..."></textarea>
+            <div class="modal-actions">
+                <button id="save-song-btn" class="btn primary" disabled>Save</button>
+                <button id="cancel-song-btn" class="btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="setlist-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="setlist-modal-title">New Setlist</h2>
+            <input type="text" id="setlist-name-input" placeholder="Setlist Name">
+            <div class="modal-actions">
+                <button id="save-setlist-btn" class="btn primary">Save</button>
+                <button id="cancel-setlist-btn" class="btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
