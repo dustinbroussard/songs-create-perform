@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Hill Rd. Setlist Manager</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="editor/editor.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     <link rel="icon" href="assets/icons/icon-192x192.png">
@@ -29,17 +30,20 @@
 </button>
    
   </div>
-  <nav class="app-nav" aria-label="Main tabs">
-    <button type="button" class="nav-button active" data-tab="songs" aria-label="Songs tab">
-      <i class="fas fa-book"></i> Songs
-    </button>
-    <button type="button" class="nav-button" data-tab="setlists" aria-label="Setlists tab">
-      <i class="fas fa-list"></i> Setlists
-    </button>
-    <button type="button" class="nav-button" data-tab="performance" aria-label="Performance tab">
-      <i class="fas fa-music"></i> Lyrics
-    </button>
-  </nav>
+    <nav class="app-nav" aria-label="Main tabs">
+        <button type="button" class="nav-button active" data-tab="songs" aria-label="Songs tab">
+          <i class="fas fa-book"></i> Songs
+        </button>
+        <button type="button" class="nav-button" data-tab="setlists" aria-label="Setlists tab">
+          <i class="fas fa-list"></i> Setlists
+        </button>
+        <button type="button" class="nav-button" data-tab="performance" aria-label="Performance tab">
+          <i class="fas fa-music"></i> Lyrics
+        </button>
+        <button type="button" class="nav-button" data-tab="editor" aria-label="Editor tab">
+          <i class="fas fa-pen"></i> Editor
+        </button>
+      </nav>
 <div id="tab-toolbar" class="toolbar"></div>
 </header>
     <main id="app">
@@ -70,6 +74,12 @@
                 <div id="performance-song-list" class="song-list"></div>
             </div>
         </section>
+
+        <section id="editor" class="tab">
+            <div class="page-content editor-page">
+                <div id="editor-mount" class="editor-mount"></div>
+            </div>
+        </section>
     </main>
     <div id="song-modal" class="modal">
         <div class="modal-content">
@@ -94,6 +104,11 @@
         </div>
     </div>
     </div>
+    <script src="core/song-core.js"></script>
     <script src="script.js"></script>
+
+    <div id="editor-mode" class="modal" style="display:none;">
+      <div class="modal-content" id="editor-overlay"></div>
+    </div>
 </body>
 </html>
