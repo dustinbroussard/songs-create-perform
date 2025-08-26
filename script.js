@@ -10,6 +10,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// ---- Lazy-loaded Editor integration ----
+let editorLoaded = false;
+function ensureEditorLoaded(openOverlay = false, initialSongId = null) {
+    if (editorLoaded) {
+        if (openOverlay) openEditor(initialSongId);
+        return;
+    }
+    const s = document.createElement('script');
+    s.src = 'editor.js';
+    s.onload = () => {
+        editorLoaded = true;
+        window.Editor?.init?.({
+            core: window.SongCore,
+            getSongs: () => JSON.parse(localStorage.getItem('songs') || '[]'),
+            setSongs: (songs) => localStorage.setItem('songs', JSON.stringify(songs || [])),
+            onSongSaved: (song) => {
+                if (typeof window.app?.renderSongs === 'function') window.app.renderSongs();
+            }
+        });
+        if (openOverlay) openEditor(initialSongId);
+    };
+    document.head.appendChild(s);
+}
+
+function openEditor(songId = null) {
+    const host = document.getElementById('editor-overlay');
+    const modal = document.getElementById('editor-mode');
+    modal.style.display = 'flex';
+    window.Editor?.open?.({
+        container: host,
+        songId,
+    });
+
+    const esc = (e) => { if (e.key === 'Escape') { closeEditor(); } };
+    document.addEventListener('keydown', esc, { once: true });
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeEditor();
+    }, { once: true });
+}
+
+function closeEditor() {
+    const modal = document.getElementById('editor-mode');
+    modal.style.display = 'none';
+    window.Editor?.teardown?.();
+}
+
 // ==== SETLIST MANAGER MODULE 
 function normalizeSetlistName(name) {
     return name.replace(/\.[^/.]+$/, '')  // Remove file extension
@@ -326,6 +372,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <select id="performance-setlist-select" class="setlist-select"></select>
                 <input type="text" id="performance-song-search" class="search-input" placeholder="Find any song...">
                 <button id="start-performance-btn" class="btn primary"><i class="fas fa-play"></i> Start</button>
+            `,
+            editor: `
+                <button id="new-song-in-editor" class="btn"><i class="fas fa-plus"></i> New</button>
+                <button id="open-selected-in-editor" class="btn"><i class="fas fa-pen"></i> Edit Selected</button>
             `
         },
 
@@ -532,6 +582,10 @@ document.addEventListener('DOMContentLoaded', () => {
             this.availableSongsContainer.addEventListener('click', (e) => this.handleAvailableSongsClick(e));
             this.currentSetlistSongsContainer.addEventListener('click', (e) => this.handleCurrentSetlistSongsClick(e));
             this.performanceSongList.addEventListener('click', (e) => this.handlePerformanceSongClick(e));
+            this.songList.addEventListener('click', (e) => {
+                const item = e.target.closest('.song-item');
+                if (item) this.currentSongId = item.dataset.id;
+            });
             // Add theme toggle button handler
             document.getElementById('theme-toggle-btn')?.addEventListener('click', () => {
                 const currentTheme = document.documentElement.dataset.theme;
@@ -560,7 +614,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.edit-song-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = e.target.closest('.song-item').dataset.id;
-                    this.openSongModal(id);
+                    this.currentSongId = id;
+                    ensureEditorLoaded(true, id);
                 });
             });
 
@@ -964,6 +1019,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const originalRenderToolbar = app.renderToolbar.bind(app);
+    app.renderToolbar = function(tab) {
+        originalRenderToolbar(tab);
+        if (tab === 'editor') {
+            ensureEditorLoaded(false);
+            document.getElementById('new-song-in-editor')?.addEventListener('click', () => {
+                ensureEditorLoaded(true, null);
+            });
+            document.getElementById('open-selected-in-editor')?.addEventListener('click', () => {
+                const id = this.currentSongId || null;
+                ensureEditorLoaded(true, id);
+            });
+        }
+    };
+
+    window.app = app;
     app.init();
 
     function finishImportSetlist(name, text) {
