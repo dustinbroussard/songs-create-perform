@@ -336,9 +336,10 @@ img, video, iframe {
     }
 
     .modal-content {
-        margin: 10% auto; /* Adjust modal margin for tablets */
+        margin: 8% auto; /* Adjust modal margin for tablets */
         padding: 1.5rem; /* Reduced modal padding */
         max-width: 450px; /* Slightly smaller max-width for modals */
+        width: 90% !important;
     }
 
     .modal-content h2 {
@@ -399,7 +400,7 @@ img, video, iframe {
 
     #theme-modal .modal-content {
         min-width: 280px;
-        max-width: 380px;
+        max-width: 400px;
     }
 
     #theme-modal .theme-btn {
@@ -651,7 +652,7 @@ img, video, iframe {
     margin: 8% auto;
     padding: 2.2rem 2.2rem 1.2rem 2.2rem;
     border: 2px solid var(--accent-primary);
-    width: 94vw;
+    width: 90%;
     max-width: 400px;
     border-radius: 24px;
     box-shadow: 0 0 32px 2px var(--accent-glow), 0 4px 40px 8px #000b;
@@ -1299,8 +1300,7 @@ img, video, iframe {
 }
 #theme-modal .modal-content {
   z-index: 20100 !important;
-  min-width: 320px;
-  max-width: 420px;
+  width: 90%;
   margin: 0 auto;
   margin-top: 4vh !important;    /* Gives a 4% vertical gap from the top */
   border-radius: 18px;

@@ -36,7 +36,6 @@
     <script src="lib/mammoth.browser.min.js"></script>
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
     <div class="main-box">
       <header class="app-header">
         <div class="header-top">
@@ -126,7 +125,7 @@
           </div>
         </section>
       </main>
-      <div id="song-modal" class="modal">
+      <div id="song-modal">
         <div class="modal-content">
           <h2 id="song-modal-title">Add Song</h2>
           <input type="text" id="song-title-input" placeholder="Song Title" />
@@ -143,7 +142,7 @@
         </div>
       </div>
 
-      <div id="setlist-modal" class="modal">
+      <div id="setlist-modal">
         <div class="modal-content">
           <h2 id="setlist-modal-title">New Setlist</h2>
           <input
@@ -158,9 +157,9 @@
         </div>
       </div>
     </div>
-    <script defer src="/config.js"></script>
-    <script defer src="/core/song-core.js"></script>
-    <script defer src="/script.js"></script>
+    <script defer src="config.js"></script>
+    <script defer src="core/song-core.js"></script>
+    <script defer src="script.js"></script>
     <script defer>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
