@@ -3,8 +3,8 @@ window.App = window.App || {};
 App.Store = {
   get(k, d = null) {
     try {
-      const v = localStorage.getItem(k);
-      return v ? JSON.parse(v) : d;
+      const raw = localStorage.getItem(k);
+      return raw ? App.Utils.safeParse(raw, d) : d;
     } catch {
       return d;
     }
@@ -40,45 +40,32 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ==== OFFLINE BANNER ====
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+document.addEventListener("DOMContentLoaded", () => {
+  const { once } = App.Utils || {};
+  once && once("offline-banner", () => {
     const banner = document.getElementById("offline-banner");
     if (!banner) return;
-    const update = () => {
-      if (navigator.onLine) banner.setAttribute("hidden", "");
-      else banner.removeAttribute("hidden");
-    };
+    const update = () =>
+      navigator.onLine
+        ? banner.setAttribute("hidden", "")
+        : banner.removeAttribute("hidden");
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
     update();
-  },
-  { once: true },
-);
+  });
+});
 
 // ==== SETLIST MANAGER MODULE
-function normalizeSetlistName(name) {
-  return name
-    .replace(/\.[^/.]+$/, "") // Remove file extension
-    .replace(/[_\-]+/g, " ")
-    .replace(/[^\w\s]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-const SetlistsManager = (() => {
+App.Setlists = (() => {
+  const { safeParse, normalizeSetlistName } = App.Utils;
   let setlists = new Map();
   const DB_KEY = "setlists";
 
   function load() {
     try {
       const raw = localStorage.getItem(DB_KEY);
-      if (raw) {
-        const arr = JSON.parse(raw);
-        setlists = new Map(arr.map((obj) => [obj.id, obj]));
-      }
+      const arr = safeParse(raw, []);
+      setlists = new Map(arr.map((obj) => [obj.id, obj]));
     } catch (error) {
       setlists = new Map();
     }
@@ -250,7 +237,7 @@ const SetlistsManager = (() => {
     // Add setlist with fuzzy matched songs
     let setlist;
     try {
-      setlist = SetlistsManager.addSetlist(normalizedName, songIds);
+      setlist = App.Setlists.addSetlist(normalizedName, songIds);
     } catch (err) {
       alert(err.message || "Failed to create setlist.");
       return null;
@@ -487,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             const format = prompt("Export format? (json/txt/csv)", "json");
             if (!format) return;
-            const content = SetlistsManager.exportSetlist(
+            const content = App.Setlists.exportSetlist(
               this.currentSetlistId,
               this.songs,
               format.trim().toLowerCase(),
@@ -495,7 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (content) {
               let ext =
                 format === "csv" ? "csv" : format === "txt" ? "txt" : "json";
-              const setlist = SetlistsManager.getSetlistById(
+              const setlist = App.Setlists.getSetlistById(
                 this.currentSetlistId,
               );
               const name = setlist
@@ -584,7 +571,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Data Management
     loadData() {
-      this.songs = JSON.parse(localStorage.getItem("songs")) || [];
+      const rawSongs = localStorage.getItem("songs");
+      this.songs = App.Utils.safeParse(rawSongs, []);
       const theme = localStorage.getItem("theme") || "dark";
       document.documentElement.dataset.theme = theme;
     },
@@ -799,8 +787,8 @@ document.addEventListener("DOMContentLoaded", () => {
     deleteSong(id) {
       if (confirm("Are you sure you want to delete this song?")) {
         this.removeLyric(id);
-        SetlistsManager.getAllSetlists().forEach((s) => {
-          SetlistsManager.removeSongFromSetlist(s.id, id);
+        App.Setlists.getAllSetlists().forEach((s) => {
+          App.Setlists.removeSongFromSetlist(s.id, id);
         });
         this.renderSongs();
         this.renderSetlists();
@@ -851,7 +839,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Setlist Management
     renderSetlists() {
-      const setlists = SetlistsManager.getAllSetlists();
+      const setlists = App.Setlists.getAllSetlists();
       if (this.setlistSelect) {
         this.setlistSelect.innerHTML =
           '<option value="">Select a setlist...</option>';
@@ -895,7 +883,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     renderSetlistSongs() {
-      const setlist = SetlistsManager.getSetlistById(this.currentSetlistId);
+      const setlist = App.Setlists.getSetlistById(this.currentSetlistId);
       const allSongs = this.songs;
 
       if (!setlist) {
@@ -957,7 +945,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const newOrder = Array.from(
               this.currentSetlistSongsContainer.querySelectorAll(".song-item"),
             ).map((item) => item.dataset.id);
-            SetlistsManager.updateSetlistSongs(this.currentSetlistId, newOrder);
+            App.Setlists.updateSetlistSongs(this.currentSetlistId, newOrder);
             this.renderSetlistSongs();
           },
         },
@@ -967,7 +955,7 @@ document.addEventListener("DOMContentLoaded", () => {
     openSetlistModal(mode = "add") {
       this.modalMode = mode;
       if (mode === "rename" && this.currentSetlistId) {
-        const setlist = SetlistsManager.getSetlistById(this.currentSetlistId);
+        const setlist = App.Setlists.getSetlistById(this.currentSetlistId);
         this.setlistModalTitle.textContent = "Rename Setlist";
         this.setlistNameInput.value = setlist?.name || "";
       } else {
@@ -992,9 +980,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         if (this.modalMode === "rename" && this.currentSetlistId) {
-          SetlistsManager.renameSetlist(this.currentSetlistId, name);
+          App.Setlists.renameSetlist(this.currentSetlistId, name);
         } else {
-          const setlist = SetlistsManager.addSetlist(name, []);
+          const setlist = App.Setlists.addSetlist(name, []);
           this.currentSetlistId = setlist.id;
         }
       } catch (err) {
@@ -1007,7 +995,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleDuplicateSetlist() {
       if (!this.currentSetlistId) return;
-      const newSetlist = SetlistsManager.duplicateSetlist(
+      const newSetlist = App.Setlists.duplicateSetlist(
         this.currentSetlistId,
       );
       if (newSetlist) {
@@ -1019,7 +1007,7 @@ document.addEventListener("DOMContentLoaded", () => {
     handleDeleteSetlist() {
       if (!this.currentSetlistId) return;
       if (confirm("Delete this setlist?")) {
-        SetlistsManager.deleteSetlist(this.currentSetlistId);
+        App.Setlists.deleteSetlist(this.currentSetlistId);
         this.currentSetlistId = null;
         this.renderSetlists();
       }
@@ -1035,7 +1023,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const songItem = e.target.closest(".song-item");
       if (!songItem || !this.currentSetlistId) return;
       const id = songItem.dataset.id;
-      SetlistsManager.addSongToSetlist(this.currentSetlistId, id);
+      App.Setlists.addSongToSetlist(this.currentSetlistId, id);
       this.renderSetlistSongs();
     },
 
@@ -1044,13 +1032,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!songItem || !this.currentSetlistId) return;
       const id = songItem.dataset.id;
       if (e.target.closest(".remove-from-setlist-btn")) {
-        SetlistsManager.removeSongFromSetlist(this.currentSetlistId, id);
+        App.Setlists.removeSongFromSetlist(this.currentSetlistId, id);
         this.renderSetlistSongs();
       } else if (e.target.closest(".move-up-btn")) {
-        SetlistsManager.moveSongInSetlist(this.currentSetlistId, id, -1);
+        App.Setlists.moveSongInSetlist(this.currentSetlistId, id, -1);
         this.renderSetlistSongs();
       } else if (e.target.closest(".move-down-btn")) {
-        SetlistsManager.moveSongInSetlist(this.currentSetlistId, id, 1);
+        App.Setlists.moveSongInSetlist(this.currentSetlistId, id, 1);
         this.renderSetlistSongs();
       }
     },
@@ -1075,7 +1063,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const query = this.performanceSongSearch.value.trim();
 
       if (this.performanceSetlistId) {
-        const setlist = SetlistsManager.getSetlistById(
+        const setlist = App.Setlists.getSetlistById(
           this.performanceSetlistId,
         );
         if (setlist) {
@@ -1117,7 +1105,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleStartPerformance() {
       if (this.performanceSetlistId) {
-        const setlist = SetlistsManager.getSetlistById(
+        const setlist = App.Setlists.getSetlistById(
           this.performanceSetlistId,
         );
         if (setlist && setlist.songs.length > 0) {
@@ -1216,11 +1204,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  App.Main = app;
   window.app = app;
   app.init();
 
   function finishImportSetlist(name, text) {
-    const result = SetlistsManager.importSetlistFromText(name, text, app.songs);
+    const result = App.Setlists.importSetlistFromText(name, text, app.songs);
     if (result) {
       app.currentSetlistId = result.setlist.id;
       app.renderSetlists();

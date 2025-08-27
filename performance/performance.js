@@ -1,5 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const { safeParse, log } = App.Utils || { safeParse: (s)=>{try{return JSON.parse(s);}catch{return null;}}, log: ()=>{} };
+    const { safeParse, log, once } = App.Utils || { safeParse: (s)=>{try{return JSON.parse(s);}catch{return null;}}, log: ()=>{}, once: null };
+    const init = () => {
+      App.Utils.once("offline-banner", () => {
+        const banner = document.getElementById("offline-banner");
+        if (!banner) return;
+        const update = () =>
+          navigator.onLine
+            ? banner.setAttribute("hidden", "")
+            : banner.removeAttribute("hidden");
+        window.addEventListener("online", update);
+        window.addEventListener("offline", update);
+        update();
+      });
     const app = {
         // DOM Elements
         performanceMode: document.getElementById('performance-mode'),
@@ -59,8 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
         chordMode: localStorage.getItem('perfChordMode') || 'off',
 
         fontSize: 32, // default value; will set per song
-        perSongFontSizes: JSON.parse(localStorage.getItem('perSongFontSizes') || '{}'),
-        perSongAutoScroll: JSON.parse(localStorage.getItem('perSongAutoScroll') || '{}'),
+        perSongFontSizes: safeParse(localStorage.getItem('perSongFontSizes'), {}),
+        perSongAutoScroll: safeParse(localStorage.getItem('perSongAutoScroll'), {}),
         minFontSize: 8,
         maxFontSize: 72,
         fontSizeStep: 1,
@@ -174,10 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         maybeResumeSetlist() {
             const lastPerfRaw = localStorage.getItem('lastPerformance');
-            let lastPerf = null;
-            if (lastPerfRaw) {
-                try { lastPerf = JSON.parse(lastPerfRaw); } catch (e) {}
-            }
+            const lastPerf = safeParse(lastPerfRaw, null);
             // Only prompt if we're entering the SAME setlist as before, and it wasn't at the beginning
             if (
                 lastPerf &&
@@ -463,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
           song.chords = chordsOut;
           song.lastEditedAt = new Date().toISOString();
 
-          const all = JSON.parse(localStorage.getItem('songs') || '[]');
+          const all = safeParse(localStorage.getItem('songs'), []);
           const idx = all.findIndex(s=> s.id===song.id);
           if(idx!==-1){ all[idx]=song; localStorage.setItem('songs', JSON.stringify(all)); }
         },
@@ -480,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
           song.lyrics = Ls.join('\n');
           song.chords = Cs.join('\n');
           song.lastEditedAt = new Date().toISOString();
-          const all = JSON.parse(localStorage.getItem('songs') || '[]');
+          const all = safeParse(localStorage.getItem('songs'), []);
           const idx = all.findIndex(s=> s.id===song.id);
           if(idx!==-1){ all[idx]=song; localStorage.setItem('songs', JSON.stringify(all)); }
 
@@ -505,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
           song.tags = this.perfTags.value.split(',').map(t=>t.trim()).filter(Boolean);
           song.notes = this.perfNotes.value || '';
           song.lastEditedAt = new Date().toISOString();
-          const all = JSON.parse(localStorage.getItem('songs') || '[]');
+          const all = safeParse(localStorage.getItem('songs'), []);
           const idx = all.findIndex(s=> s.id===song.id);
           if(idx!==-1){ all[idx]=song; localStorage.setItem('songs', JSON.stringify(all)); }
         },
@@ -692,5 +701,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     app.init();
+  };
+
+  once ? once('performance-init', init) : init();
 });
 

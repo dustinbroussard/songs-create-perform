@@ -30,12 +30,12 @@
       href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-    <script src="lib/mammoth.browser.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script defer src="lib/mammoth.browser.min.js"></script>
   </head>
   <body>
-    <div id="offline-banner" class="offline-banner" hidden>Offline</div>
+    <div id="offline-banner" class="offline-banner" hidden>Offline mode: some features may be limited.</div>
     <div class="main-box">
       <header class="app-header">
         <div class="header-top">
@@ -164,12 +164,14 @@
     <script defer>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/sw.js")
-            .then(() => console.log("sw:registered"))
-            .catch((err) => console.log("sw:failed", err));
+          navigator.serviceWorker.register("/sw.js")
+            .then(r => console.log("sw: registered", r.scope))
+            .catch(err => console.log("sw: failed", err));
         });
+        let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (refreshing) return;
+          refreshing = true;
           window.location.reload();
         });
       }
