@@ -1,7 +1,7 @@
 "use strict";
-const VERSION = "v10"; // bump on SW-relevant changes
-const STATIC_CACHE = `hrsm-static-${VERSION}`;
-const RUNTIME_CACHE = `hrsm-runtime-${VERSION}`;
+const CACHE_VERSION = "v11"; // bump on SW-relevant changes
+const STATIC_CACHE = `hrsm-static-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `hrsm-runtime-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   "/",
   "/index.html",
@@ -50,7 +50,9 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (req.mode === "navigate") {
-    e.respondWith(fetch(req).catch(() => caches.match("/assets/offline.html")));
+    e.respondWith(
+      fetch(req).catch(() => caches.match("/assets/offline.html")),
+    );
     return;
   }
   if (STATIC_ASSETS.includes(url.pathname)) {
@@ -64,6 +66,21 @@ self.addEventListener("fetch", (e) => {
             return res;
           }),
       ),
+    );
+    return;
+  }
+  if (req.url.endsWith(".json")) {
+    e.respondWith(
+      caches.match(req).then((hit) => {
+        if (hit) return hit;
+        return fetch(req)
+          .then((res) => {
+            const copy = res.clone();
+            caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
+            return res;
+          })
+          .catch(() => caches.match("/assets/offline.html"));
+      }),
     );
     return;
   }

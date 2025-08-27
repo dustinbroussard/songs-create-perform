@@ -39,6 +39,23 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+// ==== OFFLINE BANNER ====
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+    const banner = document.getElementById("offline-banner");
+    if (!banner) return;
+    const update = () => {
+      if (navigator.onLine) banner.setAttribute("hidden", "");
+      else banner.removeAttribute("hidden");
+    };
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    update();
+  },
+  { once: true },
+);
+
 // ==== SETLIST MANAGER MODULE
 function normalizeSetlistName(name) {
   return name

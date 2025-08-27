@@ -344,3 +344,7 @@
   color: var(--text-muted, #888);
 }
 .section-label { margin-top: 0.6em; font-weight: bold; }
+.empty-state {
+  text-align: center;
+  padding: 1rem;
+}
