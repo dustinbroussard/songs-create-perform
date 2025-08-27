@@ -1057,8 +1057,11 @@ document.addEventListener("DOMContentLoaded", () => {
         this.currentEditorSongIndex = this.editorSongs.findIndex(
           (s) => s.id === songId,
         );
-        if (this.currentEditorSongIndex === -1) {
-          this.currentEditorSongIndex = 0;
+        if (this.currentEditorSongIndex !== -1) {
+          this.currentSong = this.editorSongs[this.currentEditorSongIndex];
+        } else {
+          this.currentEditorSongIndex = -1;
+          this.currentSong = this.createSong("");
         }
       } else {
         this.currentEditorSongIndex = -1;
@@ -1143,6 +1146,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const lyrics = this.trimExtraEmptyLines(lyricLines.join("\n"));
         const chords = this.trimExtraEmptyLines(chordLines.join("\n"));
+
+        const titleTrim = (this.currentSong.title || "").trim();
+        const lyricsTrim = lyrics.trim();
+        const chordsTrim = chords.trim();
+        const isDefaultLyrics = lyricsTrim === this.defaultSections.trim();
+        const isBlank =
+          !titleTrim && !chordsTrim && (lyricsTrim === "" || isDefaultLyrics);
+        if (isBlank) {
+          const idx = this.songs.findIndex((s) => s.id === this.currentSong.id);
+          if (idx !== -1) {
+            this.songs.splice(idx, 1);
+            this.safeLocalStorageSet("songs", JSON.stringify(this.songs));
+          }
+          this.hasUnsavedChanges = false;
+          this.showSaveStatus("saved");
+          return;
+        }
 
         this.currentSong.lyrics = this.normalizeSectionLabels(lyrics);
         this.currentSong.chords = chords;
