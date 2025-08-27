@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const { safeParse, log, once } = App.Utils || { safeParse: (s)=>{try{return JSON.parse(s);}catch{return null;}}, log: ()=>{}, once: (_,fn)=>fn() };
-    (once || ((_,fn)=>fn()))('performance-init', () => {
+    const { safeParse, log } = App.Utils || { safeParse: (s)=>{try{return JSON.parse(s);}catch{return null;}}, log: ()=>{} };
     const app = {
         // DOM Elements
         performanceMode: document.getElementById('performance-mode'),
@@ -693,6 +692,5 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     app.init();
-    });
 });
 

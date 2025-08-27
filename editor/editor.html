@@ -31,7 +31,7 @@
       href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap"
       rel="stylesheet"
     />
-    <script defer src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
     <style>
       /* Additional styles for metadata panel */
       .metadata-panel {
@@ -90,7 +90,6 @@
     </style>
   </head>
   <body>
-    <div id="offline-banner" class="offline-banner" hidden>Offline mode: some features may be limited.</div>
     <div id="editor-mode" class="editor-mode-overlay">
       <header id="app-header">
         <div class="header-left">
@@ -449,15 +448,7 @@
     <script defer>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js")
-            .then((r) => console.log("sw: registered", r.scope))
-            .catch((err) => console.log("sw: failed", err));
-        });
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (refreshing) return;
-          refreshing = true;
-          window.location.reload();
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
         });
       }
     </script>

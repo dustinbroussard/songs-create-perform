@@ -1,7 +1,4 @@
- (function () {
-"use strict";
-window.App = window.App || {};
-const SCHEMA_VERSION = App.Config && App.Config.SCHEMA_VERSION || 1;
+const SCHEMA_VERSION = 1;
 // Enhanced song data structure with metadata
 const defaultSections = "[Intro]\n\n[Verse 1]\n\n[Pre-Chorus]\n\n[Chorus]\n\n[Verse 2]\n\n[Bridge]\n\n[Outro]";
 
@@ -349,7 +346,3 @@ async function importSongs(file) {
         throw e;
     }
 }
-
-App.Songs = Object.assign(App.Songs || {}, { create: createSong, SCHEMA_VERSION });
-App.Clipboard = App.Clipboard || ClipboardManager;
-})();
