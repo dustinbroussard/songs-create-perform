@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fontSize: 32, // default value; will set per song
         perSongFontSizes: JSON.parse(localStorage.getItem('perSongFontSizes') || '{}'),
         perSongAutoScroll: JSON.parse(localStorage.getItem('perSongAutoScroll') || '{}'),
-        minFontSize: 16,
+        minFontSize: 8,
         maxFontSize: 72,
         fontSizeStep: 1,
 

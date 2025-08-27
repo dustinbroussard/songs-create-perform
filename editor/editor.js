@@ -243,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
     editorSongs: [],
     currentEditorSongIndex: -1,
     fontSize: 16,
-    minFontSize: 12,
+    minFontSize: 8,
     maxFontSize: 72,
     fontSizeStep: 1,
     perSongFontSizes: JSON.parse(
