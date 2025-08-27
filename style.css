@@ -545,6 +545,11 @@ img, video, iframe {
     background-color: var(--bg-hover);
 }
 
+.song-item.selected {
+    background-color: var(--accent-primary);
+    color: var(--text-on-accent, #fff);
+}
+
 .setlist-editor {
     display: flex;
     gap: 0.8rem; /* Reduced gap for a tighter look */

@@ -406,6 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
     performanceSongSearch: document.getElementById("performance-song-search"),
     startPerformanceBtn: document.getElementById("start-performance-btn"),
     performanceSongList: document.getElementById("performance-song-list"),
+    editorSongList: document.getElementById("editor-song-list"),
 
     // Tab Toolbars
     tabToolbars: {
@@ -602,6 +603,21 @@ document.addEventListener("DOMContentLoaded", () => {
         this.startPerformanceBtn.addEventListener("click", () =>
           this.handleStartPerformance(),
         );
+      } else if (tab === "editor") {
+        this.editorNewBtn = document.getElementById("new-song-in-editor");
+        this.editorOpenBtn = document.getElementById(
+          "open-selected-in-editor",
+        );
+        this.editorNewBtn.addEventListener("click", () => {
+          window.location.href = "editor/editor.html?new=1";
+        });
+        this.editorOpenBtn.addEventListener("click", () => {
+          if (this.currentSongId) {
+            window.location.href = `editor/editor.html?songId=${this.currentSongId}`;
+          } else {
+            alert("Please select a song to edit.");
+          }
+        });
       }
     },
 
@@ -689,6 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (tabName === "songs") this.renderSongs();
           if (tabName === "setlists") this.renderSetlists();
           if (tabName === "performance") this.renderPerformanceTab();
+          if (tabName === "editor") this.renderEditorTab();
         });
       });
 
@@ -707,6 +724,22 @@ document.addEventListener("DOMContentLoaded", () => {
       this.performanceSongList.addEventListener("click", (e) =>
         this.handlePerformanceSongClick(e),
       );
+      this.editorSongList.addEventListener("click", (e) => {
+        const item = e.target.closest(".song-item");
+        if (item) {
+          this.currentSongId = item.dataset.id;
+          this.editorSongList
+            .querySelectorAll(".song-item")
+            .forEach((el) => el.classList.remove("selected"));
+          item.classList.add("selected");
+        }
+      });
+      this.editorSongList.addEventListener("dblclick", (e) => {
+        const item = e.target.closest(".song-item");
+        if (item) {
+          window.location.href = `editor/editor.html?songId=${item.dataset.id}`;
+        }
+      });
       this.songList.addEventListener("click", (e) => {
         const item = e.target.closest(".song-item");
         if (item) this.currentSongId = item.dataset.id;
@@ -1139,6 +1172,22 @@ document.addEventListener("DOMContentLoaded", () => {
         .join("");
     },
 
+    renderEditorTab() {
+      const songs = [...this.songs].sort((a, b) =>
+        a.title.localeCompare(b.title),
+      );
+      this.editorSongList.innerHTML = songs
+        .map(
+          (s) => `
+                <div class="song-item" data-id="${s.id}">
+                    <span>${s.title}</span>
+                </div>
+            `,
+        )
+        .join("");
+      this.currentSongId = null;
+    },
+
     handlePerformanceSongClick(e) {
       if (!e.target.closest(".perform-song-btn")) return;
       const songItem = e.target.closest(".song-item");
@@ -1188,25 +1237,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.removeChild(link);
       }, 150);
     },
-  };
-
-  const originalRenderToolbar = app.renderToolbar.bind(app);
-  app.renderToolbar = function (tab) {
-    originalRenderToolbar(tab);
-    if (tab === "editor") {
-      ensureEditorLoaded(false);
-      document
-        .getElementById("new-song-in-editor")
-        ?.addEventListener("click", () => {
-          ensureEditorLoaded(true, null);
-        });
-      document
-        .getElementById("open-selected-in-editor")
-        ?.addEventListener("click", () => {
-          const id = this.currentSongId || null;
-          ensureEditorLoaded(true, id);
-        });
-    }
   };
 
   window.app = app;

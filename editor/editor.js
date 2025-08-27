@@ -908,9 +908,15 @@ function enforceAlternating(lines) {
         loadEditorState() {
             const params = new URLSearchParams(window.location.search);
             const songId = params.get('songId');
+            const createNew = params.get('new') === '1';
             this.editorSongs = this.songs;
 
-            if (songId) {
+            if (createNew) {
+                const newSong = this.createSong('New Song');
+                this.editorSongs.push(newSong);
+                this.currentEditorSongIndex = this.editorSongs.length - 1;
+                this.safeLocalStorageSet('songs', JSON.stringify(this.editorSongs));
+            } else if (songId) {
                 this.currentEditorSongIndex = this.editorSongs.findIndex(s => s.id === songId);
                 if (this.currentEditorSongIndex === -1) this.currentEditorSongIndex = 0;
             } else {
