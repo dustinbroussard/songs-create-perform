@@ -42,17 +42,18 @@ document.addEventListener("DOMContentLoaded", function () {
 // ==== OFFLINE BANNER ====
 document.addEventListener("DOMContentLoaded", () => {
   const { once } = App.Utils || {};
-  once && once("offline-banner", () => {
-    const banner = document.getElementById("offline-banner");
-    if (!banner) return;
-    const update = () =>
-      navigator.onLine
-        ? banner.setAttribute("hidden", "")
-        : banner.removeAttribute("hidden");
-    window.addEventListener("online", update);
-    window.addEventListener("offline", update);
-    update();
-  });
+  once &&
+    once("offline-banner", () => {
+      const banner = document.getElementById("offline-banner");
+      if (!banner) return;
+      const update = () =>
+        navigator.onLine
+          ? banner.setAttribute("hidden", "")
+          : banner.removeAttribute("hidden");
+      window.addEventListener("online", update);
+      window.addEventListener("offline", update);
+      update();
+    });
 });
 
 // ==== SETLIST MANAGER MODULE
@@ -314,7 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     isDuplicateTitle(title) {
       const normalized = title.trim().toLowerCase();
-      return this.songs.some(
+      return (this.songs || []).some(
         (song) => song.title.trim().toLowerCase() === normalized,
       );
     },
@@ -572,7 +573,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Data Management
     loadData() {
       const rawSongs = localStorage.getItem("songs");
-      this.songs = App.Utils.safeParse(rawSongs, []);
+      this.songs = App.Utils.safeParse(rawSongs, []) || [];
+      if (!Array.isArray(this.songs)) this.songs = [];
       const theme = localStorage.getItem("theme") || "dark";
       document.documentElement.dataset.theme = theme;
     },
@@ -602,7 +604,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     searchLyrics(query) {
       query = query.trim().toLowerCase();
-      return this.songs.filter(
+      return (this.songs || []).filter(
         (song) =>
           song.title.toLowerCase().includes(query) ||
           (song.lyrics && song.lyrics.toLowerCase().includes(query)),
@@ -995,9 +997,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleDuplicateSetlist() {
       if (!this.currentSetlistId) return;
-      const newSetlist = App.Setlists.duplicateSetlist(
-        this.currentSetlistId,
-      );
+      const newSetlist = App.Setlists.duplicateSetlist(this.currentSetlistId);
       if (newSetlist) {
         this.currentSetlistId = newSetlist.id;
         this.renderSetlists();
@@ -1063,23 +1063,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const query = this.performanceSongSearch.value.trim();
 
       if (this.performanceSetlistId) {
-        const setlist = App.Setlists.getSetlistById(
-          this.performanceSetlistId,
-        );
+        const setlist = App.Setlists.getSetlistById(this.performanceSetlistId);
         if (setlist) {
-          songs = setlist.songs
-            .map((id) => this.songs.find((s) => s.id === id))
+          const ids = Array.isArray(setlist.songs) ? setlist.songs : [];
+          songs = ids
+            .map((id) => (this.songs || []).find((s) => s.id === id))
             .filter(Boolean);
         }
       } else {
-        songs = this.songs;
+        songs = this.songs || [];
       }
 
       if (query) {
         songs = songs.filter(
           (song) =>
             song.title.toLowerCase().includes(query.toLowerCase()) ||
-            song.lyrics.toLowerCase().includes(query.toLowerCase()),
+            (song.lyrics || "").toLowerCase().includes(query.toLowerCase()),
         );
       }
 
@@ -1105,9 +1104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleStartPerformance() {
       if (this.performanceSetlistId) {
-        const setlist = App.Setlists.getSetlistById(
-          this.performanceSetlistId,
-        );
+        const setlist = App.Setlists.getSetlistById(this.performanceSetlistId);
         if (setlist && setlist.songs.length > 0) {
           this.startPerformanceWithSong(setlist.songs[0]);
         } else {
@@ -1145,7 +1142,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     renderEditorSongList() {
-      const songs = [...this.songs].sort((a, b) =>
+      const songs = [...(this.songs || [])].sort((a, b) =>
         a.title.localeCompare(b.title),
       );
       this.editorSongList.innerHTML = songs
