@@ -3,6 +3,7 @@ window.App = window.App || {};
 App.Config = {
   APP_NAME: "Hill Rd Setlist Manager",
   VERSION: "1.0.0",
+  DEBUG: true,
   STORAGE: {
     SONGS: "hrsm:songs",
     SETLISTS: "hrsm:setlists",

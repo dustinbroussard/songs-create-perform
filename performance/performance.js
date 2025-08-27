@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const { safeParse, log } = App.Utils || { safeParse: (s)=>{try{return JSON.parse(s);}catch{return null;}}, log: ()=>{} };
     const app = {
         // DOM Elements
         performanceMode: document.getElementById('performance-mode'),
@@ -137,7 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Load data from localStorage
         loadData() {
-            this.songs = JSON.parse(localStorage.getItem('songs')) || [];
+            const raw = localStorage.getItem('songs');
+            this.songs = safeParse(raw, []);
             const theme = localStorage.getItem('theme') || 'default-dark';
             document.documentElement.dataset.theme = theme;
         },
@@ -150,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.performanceSetlistId) {
                 const setlistRaw = localStorage.getItem('setlists');
                 if (setlistRaw) {
-                    const setlists = JSON.parse(setlistRaw);
+                    const setlists = safeParse(setlistRaw, []);
                     const setlist = setlists.find(s => s.id === this.performanceSetlistId);
                     if (setlist) {
                         this.performanceSongs = setlist.songs
@@ -212,12 +214,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             this.toggleThemeBtn?.addEventListener('click', () => this.handlePerformanceThemeToggle());
             this.exitPerformanceBtn?.addEventListener('click', () => this.exitPerformanceMode());
-            this.prevSongBtn.addEventListener('click', () => this.navigatePerformanceSong(-1));
-            this.nextSongBtn.addEventListener('click', () => this.navigatePerformanceSong(1));
-            this.scrollToTopBtn.addEventListener('click', () => {
+            this.prevSongBtn?.addEventListener('click', () => this.navigatePerformanceSong(-1));
+            this.nextSongBtn?.addEventListener('click', () => this.navigatePerformanceSong(1));
+            this.scrollToTopBtn?.addEventListener('click', () => {
                 this.lyricsDisplay.scrollTo({ top: 0, behavior: 'smooth' });
             });
-            this.autoScrollBtn.addEventListener('click', () => this.toggleAutoScroll());
+            this.autoScrollBtn?.addEventListener('click', () => this.toggleAutoScroll());
             this.autoscrollSettingsBtn?.addEventListener('click', () => {
                 this.autoscrollDelayModal.classList.add('is-open');
                 this.autoscrollDelaySlider.value = this.autoscrollDelay;
@@ -225,13 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.autoscrollSpeedSlider.value = this.autoScrollSpeed;
                 this.autoscrollSpeedValue.textContent = this.autoScrollSpeed;
             });
-            this.autoscrollDelaySlider.addEventListener('input', (e) => {
+            this.autoscrollDelaySlider?.addEventListener('input', (e) => {
                 this.autoscrollDelayValue.textContent = e.target.value + 's';
             });
-            this.autoscrollSpeedSlider.addEventListener('input', (e) => {
+            this.autoscrollSpeedSlider?.addEventListener('input', (e) => {
                 this.autoscrollSpeedValue.textContent = e.target.value;
             });
-            this.closeAutoscrollDelayModal.addEventListener('click', () => {
+            this.closeAutoscrollDelayModal?.addEventListener('click', () => {
                 this.autoscrollDelay = Number(this.autoscrollDelaySlider.value);
                 localStorage.setItem('autoscrollDelay', this.autoscrollDelay);
                 this.autoScrollSpeed = Number(this.autoscrollSpeedSlider.value);
@@ -250,6 +252,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.lyricsDisplay.addEventListener('scroll', () => this.updateScrollButtonsVisibility());
             this.lyricsDisplay.addEventListener('touchstart', () => this.stopAutoScroll());
             this.lyricsDisplay.addEventListener('mousedown', () => this.stopAutoScroll());
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) this.stopAutoScroll();
+            });
 
             this.perfMenuBtn?.addEventListener('click', ()=> this.perfMenuModal.classList.add('is-open'));
             this.perfMenuClose?.addEventListener('click', ()=> this.perfMenuModal.classList.remove('is-open'));
@@ -296,7 +301,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Display current song
         displayCurrentPerformanceSong() {
             const song = this.performanceSongs[this.currentPerformanceSongIndex];
-            if (!song) return;
+            if (!song) {
+                this.lyricsDisplay.innerHTML = '<p class="empty-state">Pick a song to see performance tips.</p>';
+                this.performanceSongInfo.innerHTML = '';
+                return;
+            }
 
             this.autoFitManuallyOverridden = false; // Reset override for new song
 

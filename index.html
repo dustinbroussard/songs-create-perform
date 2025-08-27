@@ -35,6 +35,7 @@
     <script src="lib/mammoth.browser.min.js"></script>
   </head>
   <body>
+    <div id="offline-banner" class="offline-banner" hidden>Offline</div>
     <div class="main-box">
       <header class="app-header">
         <div class="header-top">
@@ -157,12 +158,19 @@
       </div>
     </div>
     <script defer src="config.js"></script>
+    <script defer src="utils.js"></script>
     <script defer src="core/song-core.js"></script>
     <script defer src="script.js"></script>
     <script defer>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js").catch(() => {});
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(() => console.log("sw:registered"))
+            .catch((err) => console.log("sw:failed", err));
+        });
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          window.location.reload();
         });
       }
     </script>
