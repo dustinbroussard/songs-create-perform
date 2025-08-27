@@ -7,9 +7,15 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "prettier -w \"**/*.{js,css,html,json}\"",
+    "serve": "http-server -c-1 -p 5173 ."
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "http-server": "^14.1.1"
+  }
 }

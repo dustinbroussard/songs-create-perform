@@ -1,28 +1,82 @@
-const CACHE_NAME = 'hill-rd-setlist-manager-v2';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/style.css',
-    '/script.js',
-    '/manifest.json',
-    '/performance/performance.html',
-    '/performance/performance.js',
-    '/performance/performance.css',
-    '/assets/icons/icon-192x192.png',
-    '/assets/icons/icon-512x512.png',
-    '/assets/images/mylogo.png',
-    '/lib/mammoth.browser.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
-    'https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js'
+"use strict";
+const VERSION = "v10"; // bump on SW-relevant changes
+const STATIC_CACHE = `hrsm-static-${VERSION}`;
+const RUNTIME_CACHE = `hrsm-runtime-${VERSION}`;
+const STATIC_ASSETS = [
+  "/",
+  "/index.html",
+  "/editor/editor.html",
+  "/performance/performance.html",
+  "/style.css",
+  "/editor/editor.css",
+  "/performance/performance.css",
+  "/script.js",
+  "/editor/editor.js",
+  "/performance/performance.js",
+  "/core/song-core.js",
+  "/editor/songs.js",
+  "/config.js",
+  "/manifest.json",
+  "/assets/offline.html",
+  "/assets/favicon.svg",
 ];
-
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache);
-            })
-    );
+// install: pre-cache app shell
+self.addEventListener("install", (e) => {
+  e.waitUntil(
+    caches
+      .open(STATIC_CACHE)
+      .then((c) => c.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting()),
+  );
 });
-
+// activate: clean old caches + claim
+self.addEventListener("activate", (e) => {
+  e.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((k) => ![STATIC_CACHE, RUNTIME_CACHE].includes(k))
+            .map((k) => caches.delete(k)),
+        ),
+      )
+      .then(() => self.clients.claim()),
+  );
+});
+// fetch handler
+self.addEventListener("fetch", (e) => {
+  const req = e.request;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  if (req.mode === "navigate") {
+    e.respondWith(fetch(req).catch(() => caches.match("/assets/offline.html")));
+    return;
+  }
+  if (STATIC_ASSETS.includes(url.pathname)) {
+    e.respondWith(
+      caches.match(req).then(
+        (hit) =>
+          hit ||
+          fetch(req).then((res) => {
+            const copy = res.clone();
+            caches.open(STATIC_CACHE).then((c) => c.put(req, copy));
+            return res;
+          }),
+      ),
+    );
+    return;
+  }
+  e.respondWith(
+    caches.match(req).then((hit) => {
+      const fetcher = fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
+          return res;
+        })
+        .catch(() => hit);
+      return hit || fetcher;
+    }),
+  );
+});

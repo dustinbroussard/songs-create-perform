@@ -1,53 +1,134 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <title>Hill Rd. Setlist Manager - Performance Mode</title>
-    <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="performance.css">
-    <link rel="icon" href="../assets/icons/icon-192x192.png">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap" rel="stylesheet">
-</head>
-<body>
-    <div id="performance-mode" class="performance-mode-overlay" style="display: flex;">
-        <div class="performance-header">
-            <div id="performance-song-info" class="song-info"></div>
-            <div class="performance-controls">
-                <button id="autoscroll-settings-btn" class="icon-btn" title="Autoscroll Settings"><i class="fas fa-cog"></i></button>
-                <button id="perf-menu-btn" class="icon-btn" title="Performance Menu"><i class="fas fa-ellipsis-h"></i></button>
-                <button id="theme-toggle-btn" class="icon-btn theme-toggle-btn" title="Toggle Theme"><i class="fas fa-adjust"></i></button>
-                <button id="exit-performance-btn" class="icon-btn danger" title="Exit Performance"><i class="fas fa-times"></i></button>
-            </div>
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="performance.css" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#ffffff"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#000000"
+    />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div
+      id="performance-mode"
+      class="performance-mode-overlay"
+      style="display: flex"
+    >
+      <div class="performance-header">
+        <div id="performance-song-info" class="song-info"></div>
+        <div class="performance-controls">
+          <button
+            id="autoscroll-settings-btn"
+            class="icon-btn"
+            title="Autoscroll Settings"
+          >
+            <i class="fas fa-cog"></i>
+          </button>
+          <button id="perf-menu-btn" class="icon-btn" title="Performance Menu">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+          <button
+            id="theme-toggle-btn"
+            class="icon-btn theme-toggle-btn"
+            title="Toggle Theme"
+          >
+            <i class="fas fa-adjust"></i>
+          </button>
+          <button
+            id="exit-performance-btn"
+            class="icon-btn danger"
+            title="Exit Performance"
+          >
+            <i class="fas fa-times"></i>
+          </button>
         </div>
-        <button id="prev-song-btn" class="nav-arrow left"><i class="fas fa-chevron-left"></i></button>
-        <button id="next-song-btn" class="nav-arrow right"><i class="fas fa-chevron-right"></i></button>
-        <div id="lyrics-display" class="lyrics-container"></div>
-        <div class="performance-footer">
-            <button id="footer-decrease-font-btn" class="icon-btn" title="Smaller Font"><i class="fas fa-minus"></i></button>
-            <span id="footer-font-size-display" style="min-width:2.2em;text-align:center;font-size:1.03em;">32px</span>
-            <button id="footer-increase-font-btn" class="icon-btn" title="Larger Font"><i class="fas fa-plus"></i></button>
-        </div>
+      </div>
+      <button id="prev-song-btn" class="nav-arrow left">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button id="next-song-btn" class="nav-arrow right">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <div id="lyrics-display" class="lyrics-container"></div>
+      <div class="performance-footer">
+        <button
+          id="footer-decrease-font-btn"
+          class="icon-btn"
+          title="Smaller Font"
+        >
+          <i class="fas fa-minus"></i>
+        </button>
+        <span
+          id="footer-font-size-display"
+          style="min-width: 2.2em; text-align: center; font-size: 1.03em"
+          >32px</span
+        >
+        <button
+          id="footer-increase-font-btn"
+          class="icon-btn"
+          title="Larger Font"
+        >
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
     </div>
     <div id="autoscroll-delay-modal" class="modal">
-        <div class="modal-content">
-            <h2>Set Autoscroll Delay</h2>
-            <label id="autoscroll-delay-label" for="autoscroll-delay-slider">Delay (seconds):</label>
-            <input type="range" id="autoscroll-delay-slider" min="0" max="10" step="1">
-            <span id="autoscroll-delay-value">3s</span>
-            <label for="autoscroll-speed-slider">Speed (px/50ms):</label>
-            <input type="range" id="autoscroll-speed-slider" min="0.5" max="5" step="0.1">
-            <span id="autoscroll-speed-value">1</span>
-            <button id="close-autoscroll-delay-modal" class="btn">Save</button>
-        </div>
+      <div class="modal-content">
+        <h2>Set Autoscroll Delay</h2>
+        <label id="autoscroll-delay-label" for="autoscroll-delay-slider"
+          >Delay (seconds):</label
+        >
+        <input
+          type="range"
+          id="autoscroll-delay-slider"
+          min="0"
+          max="10"
+          step="1"
+        />
+        <span id="autoscroll-delay-value">3s</span>
+        <label for="autoscroll-speed-slider">Speed (px/50ms):</label>
+        <input
+          type="range"
+          id="autoscroll-speed-slider"
+          min="0.5"
+          max="5"
+          step="0.1"
+        />
+        <span id="autoscroll-speed-value">1</span>
+        <button id="close-autoscroll-delay-modal" class="btn">Save</button>
+      </div>
     </div>
     <!-- Floating buttons go here, outside the modal but inside <body> -->
-    <button id="scroll-to-top-btn" class="scroll-to-top-btn"><i class="fas fa-arrow-up"></i></button>
-    <button id="auto-scroll-btn" class="auto-scroll-btn"><i class="fas fa-angle-double-down"></i></button>
-
+    <button id="scroll-to-top-btn" class="scroll-to-top-btn">
+      <i class="fas fa-arrow-up"></i>
+    </button>
+    <button id="auto-scroll-btn" class="auto-scroll-btn">
+      <i class="fas fa-angle-double-down"></i>
+    </button>
 
     <!-- Performance Menu Modal -->
     <div id="performance-menu-modal" class="modal">
@@ -55,7 +136,9 @@
         <h2>Performance Options</h2>
 
         <div class="modal-row">
-          <label for="perf-edit-mode"><i class="fas fa-edit"></i> Edit Mode</label>
+          <label for="perf-edit-mode"
+            ><i class="fas fa-edit"></i> Edit Mode</label
+          >
           <select id="perf-edit-mode">
             <option value="readonly">Read Only</option>
             <option value="lyrics">Lyrics Only</option>
@@ -65,7 +148,9 @@
         </div>
 
         <div class="modal-row">
-          <label for="perf-chord-mode"><i class="fas fa-guitar"></i> Chord Mode</label>
+          <label for="perf-chord-mode"
+            ><i class="fas fa-guitar"></i> Chord Mode</label
+          >
           <select id="perf-chord-mode">
             <option value="off">Off</option>
             <option value="lyrics">Lyrics Only</option>
@@ -75,14 +160,20 @@
         </div>
 
         <div class="modal-row">
-          <button id="perf-normalize-btn" class="btn"><i class="fas fa-broom"></i> Normalize Lyrics</button>
+          <button id="perf-normalize-btn" class="btn">
+            <i class="fas fa-broom"></i> Normalize Lyrics
+          </button>
         </div>
 
         <div class="modal-row">
-          <button id="perf-metadata-btn" class="btn"><i class="fas fa-info-circle"></i> Song Info</button>
+          <button id="perf-metadata-btn" class="btn">
+            <i class="fas fa-info-circle"></i> Song Info
+          </button>
         </div>
 
-        <button id="perf-menu-close" class="btn"><i class="fas fa-times"></i> Close</button>
+        <button id="perf-menu-close" class="btn">
+          <i class="fas fa-times"></i> Close
+        </button>
       </div>
     </div>
 
@@ -95,47 +186,74 @@
           <label for="perf-key">Key:</label>
           <select id="perf-key">
             <option value="">Select Key</option>
-            <option>C</option><option>C#</option><option>D</option><option>D#</option>
-            <option>E</option><option>F</option><option>F#</option><option>G</option>
-            <option>G#</option><option>A</option><option>A#</option><option>B</option>
+            <option>C</option>
+            <option>C#</option>
+            <option>D</option>
+            <option>D#</option>
+            <option>E</option>
+            <option>F</option>
+            <option>F#</option>
+            <option>G</option>
+            <option>G#</option>
+            <option>A</option>
+            <option>A#</option>
+            <option>B</option>
           </select>
         </div>
 
         <div class="metadata-row">
           <label for="perf-tempo">Tempo (BPM):</label>
-          <input type="number" id="perf-tempo" min="40" max="260">
+          <input type="number" id="perf-tempo" min="40" max="260" />
         </div>
 
         <div class="metadata-row">
           <label for="perf-ts">Time Signature:</label>
           <select id="perf-ts">
-            <option>4/4</option><option>3/4</option><option>2/4</option>
-            <option>6/8</option><option>12/8</option>
+            <option>4/4</option>
+            <option>3/4</option>
+            <option>2/4</option>
+            <option>6/8</option>
+            <option>12/8</option>
           </select>
         </div>
 
         <div class="metadata-row">
           <label for="perf-tags">Tags:</label>
-          <input type="text" id="perf-tags" placeholder="rock, ballad, easy">
+          <input type="text" id="perf-tags" placeholder="rock, ballad, easy" />
         </div>
 
         <div class="metadata-row">
           <label for="perf-notes">Performance Notes:</label>
-          <textarea id="perf-notes" rows="4" placeholder="Cues, capo, structure, etc."></textarea>
+          <textarea
+            id="perf-notes"
+            rows="4"
+            placeholder="Cues, capo, structure, etc."
+          ></textarea>
         </div>
 
         <div class="meta-actions">
-          <button id="perf-metadata-save" class="btn"><i class="fas fa-save"></i> Save</button>
-          <button id="perf-metadata-close" class="btn"><i class="fas fa-times"></i> Close</button>
+          <button id="perf-metadata-save" class="btn">
+            <i class="fas fa-save"></i> Save
+          </button>
+          <button id="perf-metadata-close" class="btn">
+            <i class="fas fa-times"></i> Close
+          </button>
         </div>
       </div>
     </div>
 
-    
-    <script src="../lib/fuse.js"></script>
-    <script src="../lib/idb.min.js"></script>
-    <script src="../lib/mammoth.browser.min.js"></script>
-    <script src="performance.js"></script>
-</body>
+    <script defer src="/config.js"></script>
+    <script defer src="../core/song-core.js"></script>
+    <script defer src="../lib/fuse.js"></script>
+    <script defer src="../lib/idb.min.js"></script>
+    <script defer src="../lib/mammoth.browser.min.js"></script>
+    <script defer src="performance.js"></script>
+    <script defer>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        });
+      }
+    </script>
+  </body>
 </html>
-
