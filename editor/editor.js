@@ -225,6 +225,7 @@ function enforceAlternating(lines) {
         songs: [],
         editorSongs: [],
         currentEditorSongIndex: -1,
+        isNewSong: false,
         fontSize: 16,
         minFontSize: 12,
         maxFontSize: 72,
@@ -913,8 +914,11 @@ function enforceAlternating(lines) {
             if (songId) {
                 this.currentEditorSongIndex = this.editorSongs.findIndex(s => s.id === songId);
                 if (this.currentEditorSongIndex === -1) this.currentEditorSongIndex = 0;
+                this.isNewSong = false;
             } else {
-                this.currentEditorSongIndex = 0;
+                this.currentEditorSongIndex = -1;
+                this.isNewSong = true;
+                this.currentSong = this.createSong('');
             }
         },
 
@@ -1000,6 +1004,11 @@ saveCurrentSong(isExplicit = false) {
             const songIndex = this.songs.findIndex(s => s.id === this.currentSong.id);
             if (songIndex !== -1) {
                 this.songs[songIndex] = this.currentSong;
+            } else {
+                this.songs.push(this.currentSong);
+                this.editorSongs = this.songs;
+                this.currentEditorSongIndex = this.songs.length - 1;
+                this.isNewSong = false;
             }
             const ok = this.safeLocalStorageSet('songs', JSON.stringify(this.songs));
             if (ok) {
@@ -1015,8 +1024,12 @@ saveCurrentSong(isExplicit = false) {
     },
 
         displayCurrentEditorSong() {
-            if (this.currentEditorSongIndex === -1) return;
-            this.currentSong = this.editorSongs[this.currentEditorSongIndex];
+            if (this.isNewSong) {
+                // currentSong already created in loadEditorState
+            } else {
+                if (this.currentEditorSongIndex === -1) return;
+                this.currentSong = this.editorSongs[this.currentEditorSongIndex];
+            }
             
             // Ensure song has all metadata fields
             if (!this.currentSong.key) this.currentSong.key = '';
@@ -1078,7 +1091,7 @@ saveCurrentSong(isExplicit = false) {
             this.redoStack = [];
             this.lastSnapshotTime = Date.now();
             this.saveUndoStack();
-            this.saveCurrentSong(true);
+            if (!this.isNewSong) this.saveCurrentSong(true);
         },
 
         renderLyrics() {
