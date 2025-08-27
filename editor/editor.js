@@ -1,16 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Ensure touch devices trigger button actions
-  document.addEventListener(
-    "touchstart",
-    (e) => {
-      const btn = e.target.closest("button");
-      if (btn) {
-        e.preventDefault();
-        btn.click();
-      }
-    },
-    { passive: false },
-  );
+  const { once, safeParse } = App.Utils || {};
+  once && once("editor-init", () => {
+    // Ensure touch devices trigger button actions
+    document.addEventListener(
+      "touchstart",
+      (e) => {
+        const btn = e.target.closest("button");
+        if (btn) {
+          e.preventDefault();
+          btn.click();
+        }
+      },
+      { passive: false },
+    );
+
+    App.Utils.once("offline-banner", () => {
+      const banner = document.getElementById("offline-banner");
+      if (!banner) return;
+      const update = () =>
+        navigator.onLine
+          ? banner.setAttribute("hidden", "")
+          : banner.removeAttribute("hidden");
+      window.addEventListener("online", update);
+      window.addEventListener("offline", update);
+      update();
+    });
 
   // Utilities
   function debounce(fn, delay = 500) {
@@ -246,8 +260,9 @@ document.addEventListener("DOMContentLoaded", () => {
     minFontSize: 8,
     maxFontSize: 72,
     fontSizeStep: 1,
-    perSongFontSizes: JSON.parse(
-      localStorage.getItem("perSongFontSizes") || "{}",
+    perSongFontSizes: safeParse(
+      localStorage.getItem("perSongFontSizes"),
+      {},
     ),
     isReadOnly: false,
     isChordsVisible: true,
@@ -343,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     },
     loadData() {
-      this.songs = JSON.parse(localStorage.getItem("songs")) || [];
+      this.songs = safeParse(localStorage.getItem("songs"), []);
       const theme = localStorage.getItem("theme") || "dark";
       document.documentElement.dataset.theme = theme;
     },
@@ -1277,12 +1292,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Initialize undo/redo stacks for this song
       const stored = localStorage.getItem(`undoStack_${this.currentSong.id}`);
-      if (stored) {
-        try {
-          this.undoStack = JSON.parse(stored).slice(-20);
-        } catch {
-          this.undoStack = [this.getSongState()];
-        }
+      const parsed = safeParse(stored, null);
+      if (parsed) {
+        this.undoStack = parsed.slice(-20);
       } else {
         this.undoStack = [this.getSongState()];
       }
@@ -1979,4 +1991,5 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   window.app = app;
+  });
 });
