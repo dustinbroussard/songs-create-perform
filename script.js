@@ -39,62 +39,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-// ---- Lazy-loaded Editor integration ----
-let editorLoaded = false;
-function ensureEditorLoaded(openOverlay = false, initialSongId = null) {
-  if (editorLoaded) {
-    if (openOverlay) openEditor(initialSongId);
-    return;
-  }
-  const s = document.createElement("script");
-  s.src = "editor.js";
-  s.onload = () => {
-    editorLoaded = true;
-    window.Editor?.init?.({
-      core: window.SongCore,
-      getSongs: () => JSON.parse(localStorage.getItem("songs") || "[]"),
-      setSongs: (songs) =>
-        localStorage.setItem("songs", JSON.stringify(songs || [])),
-      onSongSaved: (song) => {
-        if (typeof window.app?.renderSongs === "function")
-          window.app.renderSongs();
-      },
-    });
-    if (openOverlay) openEditor(initialSongId);
-  };
-  document.head.appendChild(s);
-}
-
-function openEditor(songId = null) {
-  const host = document.getElementById("editor-overlay");
-  const modal = document.getElementById("editor-mode");
-  modal.style.display = "flex";
-  window.Editor?.open?.({
-    container: host,
-    songId,
-  });
-
-  const esc = (e) => {
-    if (e.key === "Escape") {
-      closeEditor();
-    }
-  };
-  document.addEventListener("keydown", esc, { once: true });
-  modal.addEventListener(
-    "click",
-    (e) => {
-      if (e.target === modal) closeEditor();
-    },
-    { once: true },
-  );
-}
-
-function closeEditor() {
-  const modal = document.getElementById("editor-mode");
-  modal.style.display = "none";
-  window.Editor?.teardown?.();
-}
-
 // ==== SETLIST MANAGER MODULE
 function normalizeSetlistName(name) {
   return name
@@ -375,6 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
     navButtons: document.querySelectorAll(".nav-button"),
     tabs: document.querySelectorAll(".tab"),
     songList: document.getElementById("song-list"),
+    editorSongList: document.getElementById("editor-song-list"),
     addSongBtn: document.getElementById("add-song-btn"),
     deleteAllSongsBtn: document.getElementById("delete-all-songs-btn"),
     songModal: document.getElementById("song-modal"),
@@ -689,6 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (tabName === "songs") this.renderSongs();
           if (tabName === "setlists") this.renderSetlists();
           if (tabName === "performance") this.renderPerformanceTab();
+          if (tabName === "editor") this.renderEditorTab();
         });
       });
 
@@ -711,6 +657,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const item = e.target.closest(".song-item");
         if (item) this.currentSongId = item.dataset.id;
       });
+      this.editorSongList.addEventListener("click", (e) =>
+        this.handleEditorSongClick(e),
+      );
       // Add theme toggle button handler
       document
         .getElementById("theme-toggle-btn")
@@ -749,7 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", (e) => {
           const id = e.target.closest(".song-item").dataset.id;
           this.currentSongId = id;
-          ensureEditorLoaded(true, id);
+          this.startEditorWithSong(id);
         });
       });
 
@@ -759,6 +708,8 @@ document.addEventListener("DOMContentLoaded", () => {
           this.deleteSong(id);
         });
       });
+
+      if (this.editorSongList) this.renderEditorSongList();
     },
 
     openSongModal(id = null) {
@@ -1175,6 +1126,43 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = `performance/performance.html?${params.toString()}`;
     },
 
+    startEditorWithSong(songId) {
+      const params = new URLSearchParams();
+      if (songId) params.set("songId", songId);
+      const query = params.toString();
+      window.location.href = query
+        ? `editor/editor.html?${query}`
+        : "editor/editor.html";
+    },
+
+    renderEditorTab() {
+      this.renderEditorSongList();
+    },
+
+    renderEditorSongList() {
+      const songs = [...this.songs].sort((a, b) =>
+        a.title.localeCompare(b.title),
+      );
+      this.editorSongList.innerHTML = songs
+        .map(
+          (song) => `
+                <div class="song-item" data-id="${song.id}">
+                    <span>${song.title}</span>
+                    <button class="btn primary open-editor-btn" title="Edit This Song"><i class="fas fa-pen"></i></button>
+                </div>
+            `,
+        )
+        .join("");
+    },
+
+    handleEditorSongClick(e) {
+      const item = e.target.closest(".song-item");
+      if (item) this.currentSongId = item.dataset.id;
+      if (e.target.closest(".open-editor-btn") && item) {
+        this.startEditorWithSong(item.dataset.id);
+      }
+    },
+
     // Helper for downloading a file
     downloadFile(filename, content, mime = "text/plain") {
       const blob = new Blob([content], { type: mime });
@@ -1194,17 +1182,19 @@ document.addEventListener("DOMContentLoaded", () => {
   app.renderToolbar = function (tab) {
     originalRenderToolbar(tab);
     if (tab === "editor") {
-      ensureEditorLoaded(false);
       document
         .getElementById("new-song-in-editor")
         ?.addEventListener("click", () => {
-          ensureEditorLoaded(true, null);
+          this.startEditorWithSong(null);
         });
       document
         .getElementById("open-selected-in-editor")
         ?.addEventListener("click", () => {
-          const id = this.currentSongId || null;
-          ensureEditorLoaded(true, id);
+          if (this.currentSongId) {
+            this.startEditorWithSong(this.currentSongId);
+          } else {
+            alert("Please select a song first.");
+          }
         });
     }
   };
