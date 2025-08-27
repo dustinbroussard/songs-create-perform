@@ -698,7 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", (e) => {
           const id = e.target.closest(".song-item").dataset.id;
           this.currentSongId = id;
-          this.startEditorWithSong(id);
+          this.openSongModal(id);
         });
       });
 
