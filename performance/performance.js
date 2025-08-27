@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resizeObserver: null,
 
         editMode: localStorage.getItem('perfEditMode') || 'readonly',
-        chordMode: localStorage.getItem('perfChordMode') || 'both',
+        chordMode: localStorage.getItem('perfChordMode') || 'off',
 
         fontSize: 32, // default value; will set per song
         perSongFontSizes: JSON.parse(localStorage.getItem('perSongFontSizes') || '{}'),

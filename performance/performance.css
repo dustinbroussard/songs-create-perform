@@ -337,7 +337,7 @@
 
 .lyrics-line-group { margin-bottom: 0.35em; }
 .lyric-text,
-.chord-line { text-align: left; }
+.chord-line { text-align: center; }
 .chord-line {
   white-space: pre;
   font-size: 0.75em;
