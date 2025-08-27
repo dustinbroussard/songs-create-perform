@@ -1,37 +1,36 @@
 "use strict";
-const CACHE_VERSION = "v11"; // bump on SW-relevant changes
-const STATIC_CACHE = `hrsm-static-${CACHE_VERSION}`;
-const RUNTIME_CACHE = `hrsm-runtime-${CACHE_VERSION}`;
-const STATIC_ASSETS = [
-  "/",
-  "/index.html",
-  "/editor/editor.html",
-  "/performance/performance.html",
-  "/style.css",
-  "/editor/editor.css",
-  "/performance/performance.css",
-  "/script.js",
-  "/editor/editor.js",
-  "/performance/performance.js",
-  "/core/song-core.js",
-  "/editor/songs.js",
-  "/config.js",
-  "/manifest.json",
-  "/assets/offline.html",
-  "/assets/favicon.svg",
-];
-// install: pre-cache app shell
-self.addEventListener("install", (e) => {
-  e.waitUntil(
+const CACHE_VERSION = "v11"; // bump on SW-related changes
+const STATIC_CACHE = `static-${CACHE_VERSION}`;
+const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
     caches
       .open(STATIC_CACHE)
-      .then((c) => c.addAll(STATIC_ASSETS))
+      .then((cache) =>
+        cache.addAll([
+          "/",
+          "/index.html",
+          "/editor/editor.html",
+          "/performance/performance.html",
+          "/style.css",
+          "/editor/editor.css",
+          "/performance/performance.css",
+          "/config.js",
+          "/utils.js",
+          "/script.js",
+          "/editor/editor.js",
+          "/performance/performance.js",
+          "/core/song-core.js",
+          "/editor/songs.js",
+        ])
+      )
       .then(() => self.skipWaiting()),
   );
 });
-// activate: clean old caches + claim
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
     caches
       .keys()
       .then((keys) =>
@@ -44,56 +43,27 @@ self.addEventListener("activate", (e) => {
       .then(() => self.clients.claim()),
   );
 });
-// fetch handler
-self.addEventListener("fetch", (e) => {
-  const req = e.request;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
   if (req.mode === "navigate") {
-    e.respondWith(
-      fetch(req).catch(() => caches.match("/assets/offline.html")),
+    event.respondWith(
+      fetch(req).catch(() => caches.match("/index.html")),
     );
     return;
   }
-  if (STATIC_ASSETS.includes(url.pathname)) {
-    e.respondWith(
-      caches.match(req).then(
-        (hit) =>
-          hit ||
-          fetch(req).then((res) => {
-            const copy = res.clone();
-            caches.open(STATIC_CACHE).then((c) => c.put(req, copy));
-            return res;
-          }),
-      ),
-    );
-    return;
-  }
-  if (req.url.endsWith(".json")) {
-    e.respondWith(
+  if (req.method === "GET" && new URL(req.url).origin === self.location.origin) {
+    event.respondWith(
       caches.match(req).then((hit) => {
-        if (hit) return hit;
-        return fetch(req)
+        const fetcher = fetch(req)
           .then((res) => {
             const copy = res.clone();
             caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
             return res;
           })
-          .catch(() => caches.match("/assets/offline.html"));
+          .catch(() => hit);
+        return hit || fetcher;
       }),
     );
-    return;
   }
-  e.respondWith(
-    caches.match(req).then((hit) => {
-      const fetcher = fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(() => hit);
-      return hit || fetcher;
-    }),
-  );
 });
