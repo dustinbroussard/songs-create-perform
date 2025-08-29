@@ -32,6 +32,18 @@ App.Store = {
         localStorage.removeItem("setlists");
       }
     } catch {}
+    // Ensure unique song IDs and update setlists accordingly
+    try {
+      const rawSongs = localStorage.getItem(S.SONGS) || "[]";
+      const rawSetlists = localStorage.getItem(S.SETLISTS) || "[]";
+      const songs = App.Utils.safeParse(rawSongs, []);
+      const setlists = App.Utils.safeParse(rawSetlists, []);
+      const result = App.Utils.ensureUniqueIds(songs, setlists);
+      if (result.changed > 0) {
+        localStorage.setItem(S.SONGS, JSON.stringify(result.songs));
+        localStorage.setItem(S.SETLISTS, JSON.stringify(result.setlists));
+      }
+    } catch {}
     if (v !== App.Config.VERSION) {
       App.Store.set(S.VERSION, App.Config.VERSION);
     }
@@ -356,15 +368,8 @@ document.addEventListener("DOMContentLoaded", () => {
     navButtons: document.querySelectorAll(".nav-button"),
     tabs: document.querySelectorAll(".tab"),
     songList: document.getElementById("song-list"),
-    editorSongList: document.getElementById("editor-song-list"),
     addSongBtn: document.getElementById("add-song-btn"),
     deleteAllSongsBtn: document.getElementById("delete-all-songs-btn"),
-    songModal: document.getElementById("song-modal"),
-    songModalTitle: document.getElementById("song-modal-title"),
-    saveSongBtn: document.getElementById("save-song-btn"),
-    cancelSongBtn: document.getElementById("cancel-song-btn"),
-    songTitleInput: document.getElementById("song-title-input"),
-    songLyricsInput: document.getElementById("song-lyrics-input"),
     songSearchInput: document.getElementById("song-search-input"),
     songUploadInput: document.getElementById("song-upload-input"),
     setlistSelect: document.getElementById("setlist-select"),
@@ -417,10 +422,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <input type="text" id="performance-song-search" class="search-input" placeholder="Find any song...">
                 <button id="start-performance-btn" class="btn primary"><i class="fas fa-play"></i> Start</button>
             `,
-      editor: `
-                <button id="new-song-in-editor" class="btn"><i class="fas fa-plus"></i> New</button>
-                <button id="open-selected-in-editor" class="btn"><i class="fas fa-pen"></i> Edit Selected</button>
-            `,
+      
     },
 
     // State
@@ -746,9 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
-      // Guard old modal handlers as modal is removed
-      if (this.saveSongBtn) this.saveSongBtn.onclick = () => this.saveSong();
-      if (this.cancelSongBtn) this.cancelSongBtn.onclick = () => this.closeSongModal();
+      // Song modal removed; no modal handlers to attach
       this.saveSetlistBtn.addEventListener("click", () => this.saveSetlist());
       this.cancelSetlistBtn.addEventListener("click", () =>
         this.closeSetlistModal(),
@@ -766,14 +766,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const item = e.target.closest(".song-item");
         if (item) this.currentSongId = item.dataset.id;
       });
-      if (this.editorSongList) {
-        this.editorSongList.addEventListener("click", (e) =>
-          this.handleEditorSongClick(e),
-        );
-        this.editorSongList.addEventListener("dblclick", (e) =>
-          this.handleEditorSongDblClick(e),
-        );
-      }
+      
       // Add theme toggle button handler
       document
         .getElementById("theme-toggle-btn")
@@ -801,7 +794,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tabName === "songs") this.renderSongs();
       if (tabName === "setlists") this.renderSetlists();
       if (tabName === "performance") this.renderPerformanceTab();
-      if (tabName === "editor") this.renderEditorTab();
     },
 
     // Song UI and Actions
@@ -840,75 +832,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
-      if (this.editorSongList) this.renderEditorSongList();
+      
     },
 
-    openSongModal(id = null) {
-      this.currentSongId = id;
-      if (id) {
-        const song = this.getLyricById(id);
-        this.songModalTitle.textContent = "Edit Song";
-        this.songTitleInput.value = song.title;
-        this.songLyricsInput.value = song.lyrics;
-      } else {
-        this.songModalTitle.textContent = "Add Song";
-        this.songTitleInput.value = "";
-        this.songLyricsInput.value = "";
-      }
-      // enable/disable Save
-      const validate = () => {
-        const t = this.normalizeTitle(this.songTitleInput.value.trim());
-        const isGeneric = /^(new song|untitled|new|song)$/i.test(t);
-        this.saveSongBtn.disabled = !t || isGeneric;
-      };
-      this.songTitleInput.removeEventListener("_validate", validate); // no-op label to avoid duplicates
-      this.songTitleInput.addEventListener("input", validate);
-      validate();
-
-      this.songModal.classList.add('is-open');
-    },
-
-    closeSongModal() {
-      this.songModal.classList.remove('is-open');
-    },
-
-    saveSong() {
-      const rawTitle = this.songTitleInput.value.trim();
-      const title = this.normalizeTitle(rawTitle);
-      const lyrics = (this.songLyricsInput.value || "").trim();
-
-      // Treat placeholder/generic titles as invalid if lyrics are empty
-      const isGenericTitle = /^(new song|untitled|new|song)$/i.test(title);
-
-      if (!title || (isGenericTitle && lyrics.length === 0)) {
-        alert(
-          'Please enter a real song title (not "New Song"/"Untitled") and/or add some lyrics.',
-        );
-        return;
-      }
-
-      if (this.currentSongId) {
-        const song = this.songs.find((s) => s.id === this.currentSongId);
-        if (song) {
-          song.title = title;
-          song.lyrics = lyrics;
-        }
-      } else {
-        if (this.isDuplicateTitle(title)) {
-          alert("A song with that title already exists.");
-          this.closeSongModal();
-          return;
-        }
-        this.songs.push({
-          id: Date.now().toString(),
-          title,
-          lyrics,
-        });
-      }
-      this.saveData();
-      this.renderSongs();
-      this.closeSongModal();
-    },
+    
 
     deleteSong(id) {
       if (confirm("Are you sure you want to delete this song?")) {
@@ -937,7 +864,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (!title || (isGenericTitle && looksEmpty)) return;
           if (this.isDuplicateTitle(title)) return;
 
-          this.songs.push({ id: Date.now().toString(), title, lyrics });
+          this.songs.push({ id: App.Utils.genId(), title, lyrics });
           this.saveData();
           this.renderSongs();
         };
@@ -1324,42 +1251,6 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = `editor/editor.html?${query}`;
     },
 
-    renderEditorTab() {
-      this.renderEditorSongList();
-    },
-
-    renderEditorSongList() {
-      const songs = [...(this.songs || [])].sort((a, b) =>
-        a.title.localeCompare(b.title),
-      );
-      this.editorSongList.innerHTML = songs
-        .map(
-          (song) => `
-                <div class="song-item${this.currentSongId === song.id ? " selected" : ""}" data-id="${song.id}">
-                    <span>${this.escapeHtml(song.title)}</span>
-                    <button class="btn primary open-editor-btn" title="Edit This Song"><i class="fas fa-pen"></i></button>
-                </div>
-            `,
-        )
-        .join("");
-    },
-
-    handleEditorSongClick(e) {
-      const item = e.target.closest(".song-item");
-      if (!item) return;
-      const id = item.dataset.id;
-      this.currentSongId = id;
-      this.startEditorWithSong(id);
-    },
-
-    // Double-click anywhere on a row to open in editor
-    handleEditorSongDblClick(e) {
-      const item = e.target.closest(".song-item");
-      if (!item) return;
-      this.currentSongId = item.dataset.id;
-      this.startEditorWithSong(this.currentSongId);
-    },
-
     // Helper for downloading a file
     downloadFile(filename, content, mime = "text/plain") {
       const blob = new Blob([content], { type: mime });
@@ -1375,26 +1266,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   };
 
-  const originalRenderToolbar = app.renderToolbar.bind(app);
-  app.renderToolbar = function (tab) {
-    originalRenderToolbar(tab);
-    if (tab === "editor") {
-      document
-        .getElementById("new-song-in-editor")
-        ?.addEventListener("click", () => {
-          this.startEditorWithSong(null);
-        });
-      document
-        .getElementById("open-selected-in-editor")
-        ?.addEventListener("click", () => {
-          if (this.currentSongId) {
-            this.startEditorWithSong(this.currentSongId);
-          } else {
-            alert("Please select a song first.");
-          }
-        });
-    }
-  };
+  // Editor tab removed: no additional toolbar bindings
 
   App.Main = app;
   window.app = app;

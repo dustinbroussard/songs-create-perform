@@ -9,7 +9,7 @@ const { normalizeSectionLabels, cleanAIOutput, ClipboardManager } = App.Utils;
 
 const createSong = (title, lyrics = '', chords = '') => ({
     _v: SCHEMA_VERSION,
-    id: Date.now().toString(),
+    id: App.Utils.genId(),
     title,
     lyrics: lyrics.trim() ? normalizeSectionLabels(cleanAIOutput(lyrics)) : defaultSections,
     chords: cleanAIOutput(chords),

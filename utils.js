@@ -5,6 +5,8 @@ App.Utils = (() => {
   const log = (...a) => {
     if (DEBUG) console.log("[App]", ...a);
   };
+  const genId = () =>
+    Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   const safeParse = (s, fallback = null) => {
     if (s == null) return fallback;
     try {
@@ -18,6 +20,58 @@ App.Utils = (() => {
     if (onceFlags.has(key)) return;
     onceFlags.add(key);
     fn();
+  };
+  // Text helpers
+  const compactBlankLines = (text = "") => {
+    const out = [];
+    let prevEmpty = false;
+    for (const line of String(text).split("\n")) {
+      const empty = line.trim() === "";
+      if (!(empty && prevEmpty)) out.push(line);
+      prevEmpty = empty;
+    }
+    return out.join("\n");
+  };
+  const splitChordLyric = (lyrics = "", chords = "") => {
+    const L = String(lyrics).split("\n");
+    const C = String(chords || "").split("\n");
+    const max = Math.max(L.length, C.length);
+    while (C.length < max) C.push("");
+    while (L.length < max) L.push("");
+    return { L, C };
+  };
+  const stripTitleLine = (lyrics = "", title = "") => {
+    const lines = String(lyrics).split("\n");
+    const norm = String(title || "").trim().toLowerCase();
+    if (lines.length && lines[0].trim().toLowerCase() === norm) {
+      lines.shift();
+      if (lines[0]?.trim() === "") lines.shift();
+    }
+    return lines.join("\n");
+  };
+
+  // ---- Data migrations ----
+  const ensureUniqueIds = (songs = [], setlists = []) => {
+    const used = new Set();
+    const idMap = {};
+    const outSongs = songs.map((s) => ({ ...s }));
+    for (const s of outSongs) {
+      const old = s.id;
+      if (!old || used.has(String(old))) {
+        const nid = genId();
+        if (old) idMap[String(old)] = nid;
+        s.id = nid;
+      }
+      used.add(String(s.id));
+    }
+    if (Object.keys(idMap).length === 0) return { songs: outSongs, setlists, changed: 0 };
+    const outSetlists = (setlists || []).map((sl) => ({
+      ...sl,
+      songs: Array.isArray(sl.songs)
+        ? sl.songs.map((sid) => idMap[String(sid)] || sid)
+        : [],
+    }));
+    return { songs: outSongs, setlists: outSetlists, changed: Object.keys(idMap).length };
   };
   const normalizeSetlistName = (name) =>
     name
@@ -181,5 +235,5 @@ App.Utils = (() => {
       return output;
     },
   };
-  return { log, safeParse, once, normalizeSetlistName, cleanAIOutput, normalizeSectionLabels, enforceAlternating, ClipboardManager };
+  return { log, safeParse, once, normalizeSetlistName, cleanAIOutput, normalizeSectionLabels, enforceAlternating, ClipboardManager, genId, ensureUniqueIds, compactBlankLines, splitChordLyric, stripTitleLine };
 })();

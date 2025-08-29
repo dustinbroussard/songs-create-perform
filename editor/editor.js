@@ -240,6 +240,17 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     loadData() {
       this.songs = safeParse(localStorage.getItem(App.Config.STORAGE.SONGS), []);
+      // Ensure unique IDs even when landing directly on editor page
+      try {
+        const rawSet = localStorage.getItem(App.Config.STORAGE.SETLISTS) || "[]";
+        const setlists = safeParse(rawSet, []);
+        const result = App.Utils.ensureUniqueIds(this.songs, setlists);
+        if (result.changed > 0) {
+          this.songs = result.songs;
+          localStorage.setItem(App.Config.STORAGE.SONGS, JSON.stringify(result.songs));
+          localStorage.setItem(App.Config.STORAGE.SETLISTS, JSON.stringify(result.setlists));
+        }
+      } catch {}
       const theme = localStorage.getItem("theme") || "dark";
       document.documentElement.dataset.theme = theme;
     },
@@ -250,7 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ? normalizeSectionLabels(lyrics)
         : this.defaultSections;
       return {
-        id: Date.now().toString(),
+        id: App.Utils.genId(),
         title,
         lyrics: normalizedLyrics,
         chords,

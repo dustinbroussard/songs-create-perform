@@ -1174,7 +1174,6 @@ img, video, iframe {
     }
 }
 
-#song-modal,
 #setlist-modal,
 #export-setlist-modal {
     position: fixed !important;

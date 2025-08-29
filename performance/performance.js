@@ -85,29 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
           .replace(/^#+\s*/gm,'').replace(/```[\s\S]*?```/g,'')
           .trim();
         },
-        stripTitleLine(lyrics, title){
-          const lines=lyrics.split('\n'); const norm=(title||'').trim().toLowerCase();
-          if(lines.length && lines[0].trim().toLowerCase()===norm){
-            lines.shift(); if(lines[0]?.trim()==='') lines.shift();
-          }
-          return lines.join('\n');
-        },
-        splitChordLyric(lyrics='', chords=''){
-          const L=lyrics.split('\n'); const C=chords.split('\n');
-          const max=Math.max(L.length,C.length);
-          while(C.length<max) C.push('');
-          while(L.length<max) L.push('');
-          return {L,C};
-        },
-        compactBlankLines(text=''){
-          const out=[]; let prevEmpty=false;
-          for(const line of text.split('\n')){
-            const empty=line.trim()==='';
-            if(!(empty && prevEmpty)) out.push(line);
-            prevEmpty = empty;
-          }
-          return out.join('\n');
-        },
+        stripTitleLine(lyrics, title){ return App.Utils.stripTitleLine(lyrics, title); },
+        splitChordLyric(lyrics='', chords=''){ return App.Utils.splitChordLyric(lyrics, chords); },
+        compactBlankLines(text=''){ return App.Utils.compactBlankLines(text); },
 
         // Initialize
         init() {
@@ -139,6 +119,17 @@ document.addEventListener('DOMContentLoaded', () => {
         loadData() {
             const raw = localStorage.getItem(App.Config.STORAGE.SONGS);
             this.songs = safeParse(raw, []);
+            // Ensure unique IDs even when entering directly into performance page
+            try {
+                const rawSet = localStorage.getItem(App.Config.STORAGE.SETLISTS) || '[]';
+                const setlists = safeParse(rawSet, []);
+                const result = App.Utils.ensureUniqueIds(this.songs, setlists);
+                if (result.changed > 0) {
+                    this.songs = result.songs;
+                    localStorage.setItem(App.Config.STORAGE.SONGS, JSON.stringify(result.songs));
+                    localStorage.setItem(App.Config.STORAGE.SETLISTS, JSON.stringify(result.setlists));
+                }
+            } catch {}
             // Align with app-wide themes: 'dark' | 'light'
             const theme = localStorage.getItem('theme') || 'dark';
             document.documentElement.dataset.theme = theme;

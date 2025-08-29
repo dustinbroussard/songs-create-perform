@@ -1,5 +1,5 @@
 "use strict";
-const CACHE_VERSION = "v13"; // bump on SW-related changes
+const CACHE_VERSION = "v14"; // bump on SW-related changes
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
@@ -18,14 +18,30 @@ self.addEventListener("install", (event) => {
           "/performance/performance.css",
           "/lib/fuse.js",
           "/lib/Sortable.min.js",
+          "/lib/mammoth.browser.min.js",
           "/config.js",
           "/utils.js",
           "/script.js",
-          "/editor.js",
           "/editor/editor.js",
           "/performance/performance.js",
           "/core/song-core.js",
           "/editor/songs.js",
+          
+          // App assets for offline logo/icon support
+          "/assets/images/mylogo.png",
+          "/assets/favicon.svg",
+          "/assets/icons/icon-48x48.png",
+          "/assets/icons/icon-96x96.png",
+          "/assets/icons/icon-192x192.png",
+          "/assets/icons/icon-512x512.png",
+
+          // Self-hosted fonts & icons (ensure these files exist)
+          "/assets/vendor/fontawesome/css/all.min.css",
+          "/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2",
+          "/assets/vendor/fontawesome/webfonts/fa-regular-400.woff2",
+          "/assets/vendor/fontawesome/webfonts/fa-brands-400.woff2",
+          "/assets/vendor/fonts/neonderthaw.css",
+          "/assets/vendor/fonts/neonderthaw.woff2",
         ])
       )
       .then(() => self.skipWaiting())
