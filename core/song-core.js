@@ -161,5 +161,8 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = SongCore;
-  else window.SongCore = SongCore;
+  else {
+    window.App = window.App || {};
+    App.SongCore = SongCore;
+  }
 })();

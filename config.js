@@ -16,5 +16,3 @@ App.Config = Object.assign(
   },
   App.Config || {},
 );
-// Backwards compatibility for legacy code expecting window.CONFIG
-window.CONFIG = App.Config;

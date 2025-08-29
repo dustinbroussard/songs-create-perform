@@ -1,5 +1,5 @@
 "use strict";
-const CACHE_VERSION = "v11"; // bump on SW-related changes
+const CACHE_VERSION = "v13"; // bump on SW-related changes
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
@@ -21,6 +21,7 @@ self.addEventListener("install", (event) => {
           "/config.js",
           "/utils.js",
           "/script.js",
+          "/editor.js",
           "/editor/editor.js",
           "/performance/performance.js",
           "/core/song-core.js",

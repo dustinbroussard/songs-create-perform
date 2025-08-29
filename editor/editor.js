@@ -35,109 +35,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  // Clipboard Manager Class
-  class ClipboardManager {
-    static async copyToClipboard(text, showToast = true) {
-      try {
-        if (navigator.clipboard && window.isSecureContext) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          // Fallback for mobile/older browsers
-          const textArea = document.createElement("textarea");
-          textArea.value = text;
-          textArea.style.position = "fixed";
-          textArea.style.left = "-999999px";
-          textArea.style.top = "-999999px";
-          document.body.appendChild(textArea);
-          textArea.focus();
-          textArea.select();
-          document.execCommand("copy");
-          textArea.remove();
-        }
-
-        if (showToast) {
-          this.showToast("Copied to clipboard!", "success");
-        }
-        return true;
-      } catch (err) {
-        console.error("Failed to copy:", err);
-        if (showToast) {
-          this.showToast("Failed to copy to clipboard", "error");
-        }
-        return false;
-      }
-    }
-
-    static showToast(message, type = "info") {
-      let container = document.querySelector(".toast-container");
-      if (!container) {
-        container = document.createElement("div");
-        container.className = "toast-container";
-        document.body.appendChild(container);
-      }
-
-      const toast = document.createElement("div");
-      toast.className = `toast toast-${type}`;
-      toast.textContent = message;
-      container.appendChild(toast);
-
-      // Trigger animation
-      setTimeout(() => toast.classList.add("show"), 10);
-
-      // Remove after 3 seconds with fade out
-      setTimeout(() => {
-        toast.classList.remove("show");
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-
-    static formatLyricsWithChords(lyrics, chords) {
-      const lyricLines = lyrics.split("\n");
-      const chordLines = chords.split("\n");
-
-      return lyricLines
-        .map((lyricLine, i) => {
-          const chordLine = chordLines[i] || "";
-          if (chordLine.trim()) {
-            return `${chordLine}\n${lyricLine}`;
-          }
-          return lyricLine;
-        })
-        .join("\n");
-    }
-
-    static formatSongForExport(song, includeMetadata = true) {
-      let output = "";
-
-      if (includeMetadata) {
-        output += `# ${song.title}\n\n`;
-        if (song.key) output += `**Key:** ${song.key}\n`;
-        if (song.tempo) output += `**Tempo:** ${song.tempo} BPM\n`;
-        if (song.timeSignature)
-          output += `**Time Signature:** ${song.timeSignature}\n`;
-        if (song.tags && song.tags.length > 0)
-          output += `**Tags:** ${song.tags.join(", ")}\n`;
-        output += "\n---\n\n";
-      }
-
-      // Add lyrics with chords
-      if (song.chords && song.chords.trim()) {
-        output += this.formatLyricsWithChords(song.lyrics, song.chords);
-      } else {
-        output += song.lyrics;
-      }
-
-      if (song.notes && song.notes.trim()) {
-        output += "\n\n---\n**Notes:**\n" + song.notes;
-      }
-
-      return output;
-    }
-  }
+  
 
   async function callOpenRouterAPI(prompt) {
     try {
-      if (!window.CONFIG.openrouterApiKey) {
+      if (!App.Config.openrouterApiKey) {
         throw new Error("Missing OpenRouter API key");
       }
       const controller = new AbortController();
@@ -146,10 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${window.CONFIG.openrouterApiKey}`,
+          Authorization: `Bearer ${App.Config.openrouterApiKey}`,
         },
         body: JSON.stringify({
-          model: window.CONFIG.defaultModel || "openrouter/auto",
+          model: App.Config.defaultModel || "openrouter/auto",
           messages: [
             {
               role: "system",
@@ -192,32 +94,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return "";
     }
   }
-
-  function cleanAIOutput(text) {
-    return text
-      .replace(/\r\n/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .replace(/[ \t]+$/gm, "")
-      .replace(/^\s+|\s+$/g, "")
-      .replace(/^(Verse|Chorus|Bridge|Outro)[^\n]*$/gim, "[$1]")
-      .replace(/^#+\s*/gm, "")
-      .replace(/```[\s\S]*?```/g, "")
-      .replace(/^(Capo|Key|Tempo|Time Signature).*$/gim, "")
-      .trim();
-  }
-
-  function enforceAlternating(lines) {
-    const chords = [];
-    const lyrics = [];
-    for (let i = 0; i < lines.length; i++) {
-      if (i % 2 === 0) {
-        chords.push(lines[i] || "");
-      } else {
-        lyrics.push(lines[i] || "");
-      }
-    }
-    return { chords, lyrics };
-  }
+  const ClipboardManager = App.Utils && App.Utils.ClipboardManager;
+  const { cleanAIOutput, enforceAlternating, normalizeSectionLabels } = App.Utils || {};
 
   const app = {
     // DOM Elements (keeping existing ones and adding new)
@@ -318,8 +196,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       this.setupResizeObserver();
       // Preserve default visibility when config flag is undefined
-      if (window.CONFIG && Object.prototype.hasOwnProperty.call(window.CONFIG, 'chordsModeEnabled')) {
-        this.isChordsVisible = !!window.CONFIG.chordsModeEnabled;
+      if (App.Config && Object.prototype.hasOwnProperty.call(App.Config, 'chordsModeEnabled')) {
+        this.isChordsVisible = !!App.Config.chordsModeEnabled;
       }
       this.updateChordsVisibility();
     },
@@ -369,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Enhanced song creation with metadata
     createSong(title, lyrics = "", chords = "") {
       const normalizedLyrics = lyrics.trim()
-        ? this.normalizeSectionLabels(lyrics)
+        ? normalizeSectionLabels(lyrics)
         : this.defaultSections;
       return {
         id: Date.now().toString(),
@@ -384,46 +262,6 @@ document.addEventListener("DOMContentLoaded", () => {
         lastEditedAt: new Date().toISOString(),
         tags: [],
       };
-    },
-
-    normalizeSectionLabels(text = "") {
-      const sectionKeywords = [
-        "intro",
-        "verse",
-        "prechorus",
-        "chorus",
-        "bridge",
-        "outro",
-        "hook",
-        "refrain",
-        "coda",
-        "solo",
-        "interlude",
-        "ending",
-        "breakdown",
-        "tag",
-      ];
-      return text
-        .split(/\r?\n/)
-        .map((line) => {
-          const trimmed = line.trim();
-          if (!trimmed) return line;
-          const match = trimmed.match(
-            /^[\*\s\-_=~`]*[\(\[\{]?\s*([^\]\)\}]+?)\s*[\)\]\}]?[\*\s\-_=~`]*:?$/,
-          );
-          if (match) {
-            const label = match[1].trim();
-            const normalized = label.toLowerCase().replace(/[^a-z]/g, "");
-            if (sectionKeywords.some((k) => normalized.startsWith(k))) {
-              const formatted = label
-                .replace(/\s+/g, " ")
-                .replace(/(^|\s)\S/g, (c) => c.toUpperCase());
-              return `[${formatted}]`;
-            }
-          }
-          return line;
-        })
-        .join("\n");
     },
 
     trimExtraEmptyLines(text = "") {
@@ -775,11 +613,11 @@ document.addEventListener("DOMContentLoaded", () => {
     loadAISettings() {
       const key = localStorage.getItem("openrouterApiKey") || "";
       const model = localStorage.getItem("openrouterModel") || "";
-      window.CONFIG = window.CONFIG || {};
-      if (typeof window.CONFIG.autosaveEnabled === "undefined")
-        window.CONFIG.autosaveEnabled = true;
-      window.CONFIG.openrouterApiKey = key;
-      window.CONFIG.defaultModel = model;
+      App.Config = App.Config || {};
+      if (typeof App.Config.autosaveEnabled === "undefined")
+        App.Config.autosaveEnabled = true;
+      App.Config.openrouterApiKey = key;
+      App.Config.defaultModel = model;
       this.selectedModel = model;
       if (this.apiKeyInput) this.apiKeyInput.value = key;
     },
@@ -797,8 +635,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveAISettings() {
       const key = this.apiKeyInput?.value.trim() || "";
-      window.CONFIG.openrouterApiKey = key;
-      window.CONFIG.defaultModel = this.selectedModel;
+      App.Config.openrouterApiKey = key;
+      App.Config.defaultModel = this.selectedModel;
       localStorage.setItem("openrouterApiKey", key);
       localStorage.setItem("openrouterModel", this.selectedModel);
       this.aiSettingsPanel.style.display = "none";
@@ -828,7 +666,7 @@ document.addEventListener("DOMContentLoaded", () => {
           item.textContent = m.id;
           item.addEventListener("click", () => {
             this.selectedModel = m.id;
-            window.CONFIG.defaultModel = m.id;
+            App.Config.defaultModel = m.id;
             localStorage.setItem("openrouterModel", m.id);
             this.renderModelList(term);
           });
@@ -944,7 +782,7 @@ document.addEventListener("DOMContentLoaded", () => {
         continue: `Continue the lyrics after: ${selectedText}. Include chord suggestions and return chords and lyrics on alternating lines, labeling sections in square brackets.`,
       };
       const prompt = prompts[action];
-      if (!window.CONFIG.openrouterApiKey) {
+      if (!App.Config.openrouterApiKey) {
         console.warn("OpenRouter API key not set");
         alert("Please set your OpenRouter API key in AI Settings.");
         return;
@@ -1046,7 +884,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const cleaned = cleanAIOutput(responseText);
       const lines = cleaned.split(/\n/);
       const { chords, lyrics } = enforceAlternating(lines);
-      const lyricsText = this.normalizeSectionLabels(lyrics.join("\n"));
+      const lyricsText = normalizeSectionLabels(lyrics.join("\n"));
       const chordsText = chords.join("\n");
 
       if (append) {
@@ -1068,10 +906,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadEditorState() {
       const params = new URLSearchParams(window.location.search);
+      const isNew = params.get("new") === "1";
       const songId = params.get("songId");
       this.editorSongs = this.songs;
 
-      if (songId) {
+      if (isNew) {
+        this.currentEditorSongIndex = -1;
+        this.currentSong = this.createSong("");
+      } else if (songId) {
         this.currentEditorSongIndex = this.editorSongs.findIndex(
           (s) => String(s.id) === String(songId),
         );
@@ -1151,7 +993,7 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     saveCurrentSong(isExplicit = false) {
-      if (!this.currentSong || (!window.CONFIG.autosaveEnabled && !isExplicit))
+      if (!this.currentSong || (!App.Config.autosaveEnabled && !isExplicit))
         return;
       this.showSaveStatus("saving");
       try {
@@ -1194,7 +1036,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        this.currentSong.lyrics = this.normalizeSectionLabels(lyrics);
+        this.currentSong.lyrics = normalizeSectionLabels(lyrics);
         this.currentSong.chords = chords;
         this.currentSong.lastEditedAt = new Date().toISOString();
         const editedText = new Date(
@@ -1284,9 +1126,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (headerEdited) headerEdited.textContent = editedText;
       if (metaEdited) metaEdited.textContent = editedText;
 
-      this.currentSong.lyrics = this.normalizeSectionLabels(
-        this.currentSong.lyrics || "",
-      );
+      this.currentSong.lyrics = normalizeSectionLabels(this.currentSong.lyrics || "");
 
       const linesNoTitle = this.currentSong.lyrics.split("\n");
       const normalizedTitle = (this.currentSong.title || "")

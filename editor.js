@@ -1,5 +1,6 @@
 // editor.js - bridge stub for lazy-loaded editor
-window.Editor = (() => {
+window.App = window.App || {};
+App.Editor = (() => {
   let deps = null;
   let containerEl = null;
 

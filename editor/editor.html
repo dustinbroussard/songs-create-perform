@@ -444,23 +444,9 @@
 
     <script defer src="/config.js"></script>
     <script defer src="/utils.js"></script>
+    <script defer src="/script.js"></script>
     <script defer src="songs.js"></script>
     <script defer src="editor.js"></script>
-    <script defer>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js")
-            .then(r => console.log("sw: registered", r.scope))
-            .catch(err => console.log("sw: failed", err));
-        });
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (refreshing) return;
-          refreshing = true;
-          window.location.reload();
-        });
-      }
-    </script>
 
     <script>
       // Additional functionality for metadata panel

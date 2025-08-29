@@ -17,19 +17,19 @@ document.addEventListener('DOMContentLoaded', () => {
         performanceMode: document.getElementById('performance-mode'),
         performanceSongInfo: document.getElementById('performance-song-info'),
         lyricsDisplay: document.getElementById('lyrics-display'),
-        decreaseFontBtn: document.getElementById('decrease-font-btn'),
-        increaseFontBtn: document.getElementById('increase-font-btn'),
+        decreaseFontBtn: document.getElementById('footer-decrease-font-btn'),
+        increaseFontBtn: document.getElementById('footer-increase-font-btn'),
         fontSizeDisplay: document.getElementById('font-size-display'),
         footerDecreaseFontBtn: document.getElementById('footer-decrease-font-btn'),
         footerIncreaseFontBtn: document.getElementById('footer-increase-font-btn'),
         footerFontSizeDisplay: document.getElementById('footer-font-size-display'),
-        toggleThemeBtn: document.getElementById('footer-theme-toggle-btn') || document.getElementById('theme-toggle-btn'),
-        exitPerformanceBtn: document.getElementById('footer-exit-performance-btn') || document.getElementById('exit-performance-btn'),
+        toggleThemeBtn: document.getElementById('theme-toggle-btn'),
+        exitPerformanceBtn: document.getElementById('exit-performance-btn'),
         prevSongBtn: document.getElementById('prev-song-btn'),
         nextSongBtn: document.getElementById('next-song-btn'),
         scrollToTopBtn: document.getElementById('scroll-to-top-btn'),
         autoScrollBtn: document.getElementById('auto-scroll-btn'),
-        autoscrollSettingsBtn: document.getElementById('footer-autoscroll-settings-btn') || document.getElementById('autoscroll-settings-btn'),
+        autoscrollSettingsBtn: document.getElementById('autoscroll-settings-btn'),
         autoscrollDelayModal: document.getElementById('autoscroll-delay-modal'),
         autoscrollDelaySlider: document.getElementById('autoscroll-delay-slider'),
         autoscrollDelayValue: document.getElementById('autoscroll-delay-value'),
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         autoscrollSpeedValue: document.getElementById('autoscroll-speed-value'),
         closeAutoscrollDelayModal: document.getElementById('close-autoscroll-delay-modal'),
 
-        perfMenuBtn: document.getElementById('footer-perf-menu-btn') || document.getElementById('perf-menu-btn'),
+        perfMenuBtn: document.getElementById('perf-menu-btn'),
         perfMenuModal: document.getElementById('performance-menu-modal'),
         perfMenuClose: document.getElementById('perf-menu-close'),
         perfEditModeSelect: document.getElementById('perf-edit-mode'),
@@ -77,20 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         maxFontSize: 72,
         fontSizeStep: 1,
 
-        normalizeSectionLabels(text='') {
-          const keys = ['intro','verse','prechorus','chorus','bridge','outro','hook','refrain','coda','solo','interlude','ending','breakdown','tag'];
-          return text.split(/\r?\n/).map(line=>{
-            const t=line.trim(); if(!t) return line;
-            const m=t.match(/^[\*\s\-_=~`]*[\(\[\{]?\s*([^\]\)\}]+?)\s*[\)\]\}]?[\*\s\-_=~`]*:?$/);
-            if(!m) return line;
-            const label=m[1].trim(); const norm=label.toLowerCase().replace(/[^a-z]/g,'');
-            if(keys.some(k=>norm.startsWith(k))){
-              const formatted=label.replace(/\s+/g,' ').replace(/(^|\s)\S/g,c=>c.toUpperCase());
-              return `[${formatted}]`;
-            }
-            return line;
-          }).join('\n');
-        },
+        // use App.Utils.normalizeSectionLabels rather than local duplicate
         cleanText(text=''){ return text
           .replace(/\r\n/g,'\n').replace(/\n{3,}/g,'\n\n')
           .replace(/[ \t]+$/gm,'').replace(/^\s+|\s+$/g,'')
@@ -372,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if(!song) return;
 
           const title = song.title || '';
-          const lyricsNorm = this.normalizeSectionLabels( this.cleanText( this.stripTitleLine(song.lyrics||'', title) ) );
+          const lyricsNorm = App.Utils.normalizeSectionLabels( this.cleanText( this.stripTitleLine(song.lyrics||'', title) ) );
           const chordsClean = this.compactBlankLines((song.chords||'').replace(/\r\n/g,'\n'));
           const {L, C} = this.splitChordLyric(lyricsNorm, chordsClean);
 
@@ -466,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           });
 
-          let lyricsOut = this.normalizeSectionLabels( this.compactBlankLines(lyricLines.join('\n')) );
+          let lyricsOut = App.Utils.normalizeSectionLabels( this.compactBlankLines(lyricLines.join('\n')) );
           let chordsOut = this.compactBlankLines(chordLines.join('\n'));
 
           song.lyrics = lyricsOut;
@@ -482,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const song = this.performanceSongs[this.currentPerformanceSongIndex];
           if(!song) return;
           let L = this.stripTitleLine(this.cleanText(song.lyrics||''), song.title||'');
-          L = this.normalizeSectionLabels( this.compactBlankLines(L) );
+          L = App.Utils.normalizeSectionLabels( this.compactBlankLines(L) );
           let C = this.compactBlankLines((song.chords||'').replace(/\r\n/g,'\n'));
           const Ls=L.split('\n'); const Cs=C.split('\n');
           const max=Math.max(Ls.length,Cs.length);

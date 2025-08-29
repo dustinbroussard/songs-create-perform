@@ -70,6 +70,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// ==== SERVICE WORKER REGISTRATION ====
+(() => {
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((r) => console.log("sw: registered", r.scope))
+        .catch((err) => console.log("sw: failed", err));
+    });
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  }
+})();
+
 // ==== SETLIST MANAGER MODULE
 App.Setlists = (() => {
   const { safeParse, normalizeSetlistName } = App.Utils;
@@ -1175,11 +1193,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     startEditorWithSong(songId) {
       const params = new URLSearchParams();
-      if (songId) params.set("songId", songId);
+      if (songId) {
+        params.set("songId", songId);
+      } else {
+        // Explicitly request a fresh song in the editor
+        params.set("new", "1");
+      }
       const query = params.toString();
-      window.location.href = query
-        ? `editor/editor.html?${query}`
-        : "editor/editor.html";
+      window.location.href = `editor/editor.html?${query}`;
     },
 
     renderEditorTab() {
