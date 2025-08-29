@@ -897,13 +897,18 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (setlists.length && this.currentSetlistId) {
-        if (this.setlistSelect)
-          this.setlistSelect.value = this.currentSetlistId;
+        if (this.setlistSelect) this.setlistSelect.value = this.currentSetlistId;
+        // Keep performance select in sync by default if user hasn't chosen one explicitly
+        if (this.performanceSetlistSelect && !this.performanceSetlistId) {
+          this.performanceSetlistSelect.value = this.currentSetlistId;
+        }
         this.renderSetlistSongs();
       } else if (setlists.length > 0) {
         this.currentSetlistId = setlists[0].id;
-        if (this.setlistSelect)
-          this.setlistSelect.value = this.currentSetlistId;
+        if (this.setlistSelect) this.setlistSelect.value = this.currentSetlistId;
+        if (this.performanceSetlistSelect && !this.performanceSetlistId) {
+          this.performanceSetlistSelect.value = this.currentSetlistId;
+        }
         this.renderSetlistSongs();
       } else {
         this.currentSetlistId = null;
