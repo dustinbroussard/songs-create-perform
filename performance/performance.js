@@ -150,9 +150,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Load data from localStorage
         loadData() {
-            const raw = localStorage.getItem('songs');
+            const raw = localStorage.getItem(App.Config.STORAGE.SONGS);
             this.songs = safeParse(raw, []);
-            const theme = localStorage.getItem('theme') || 'default-dark';
+            // Align with app-wide themes: 'dark' | 'light'
+            const theme = localStorage.getItem('theme') || 'dark';
             document.documentElement.dataset.theme = theme;
         },
 
@@ -162,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.performanceSetlistId = params.get('setlistId') || null;
             const songId = params.get('songId');
             if (this.performanceSetlistId) {
-                const setlistRaw = localStorage.getItem('setlists');
+                const setlistRaw = localStorage.getItem(App.Config.STORAGE.SETLISTS);
                 if (setlistRaw) {
                     const setlists = safeParse(setlistRaw, []);
                     const setlist = setlists.find(s => s.id === this.performanceSetlistId);
@@ -472,9 +473,9 @@ document.addEventListener('DOMContentLoaded', () => {
           song.chords = chordsOut;
           song.lastEditedAt = new Date().toISOString();
 
-          const all = safeParse(localStorage.getItem('songs'), []);
+          const all = safeParse(localStorage.getItem(App.Config.STORAGE.SONGS), []);
           const idx = all.findIndex(s=> s.id===song.id);
-          if(idx!==-1){ all[idx]=song; localStorage.setItem('songs', JSON.stringify(all)); }
+          if(idx!==-1){ all[idx]=song; localStorage.setItem(App.Config.STORAGE.SONGS, JSON.stringify(all)); }
         },
 
         normalizeCurrentSong(){
@@ -489,9 +490,9 @@ document.addEventListener('DOMContentLoaded', () => {
           song.lyrics = Ls.join('\n');
           song.chords = Cs.join('\n');
           song.lastEditedAt = new Date().toISOString();
-          const all = safeParse(localStorage.getItem('songs'), []);
+          const all = safeParse(localStorage.getItem(App.Config.STORAGE.SONGS), []);
           const idx = all.findIndex(s=> s.id===song.id);
-          if(idx!==-1){ all[idx]=song; localStorage.setItem('songs', JSON.stringify(all)); }
+          if(idx!==-1){ all[idx]=song; localStorage.setItem(App.Config.STORAGE.SONGS, JSON.stringify(all)); }
 
           this.displayCurrentPerformanceSong();
         },
@@ -514,9 +515,9 @@ document.addEventListener('DOMContentLoaded', () => {
           song.tags = this.perfTags.value.split(',').map(t=>t.trim()).filter(Boolean);
           song.notes = this.perfNotes.value || '';
           song.lastEditedAt = new Date().toISOString();
-          const all = safeParse(localStorage.getItem('songs'), []);
+          const all = safeParse(localStorage.getItem(App.Config.STORAGE.SONGS), []);
           const idx = all.findIndex(s=> s.id===song.id);
-          if(idx!==-1){ all[idx]=song; localStorage.setItem('songs', JSON.stringify(all)); }
+          if(idx!==-1){ all[idx]=song; localStorage.setItem(App.Config.STORAGE.SONGS, JSON.stringify(all)); }
         },
 
         updateHeaderMetaLine(){
@@ -705,4 +706,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   once ? once('performance-init', init) : init();
 });
-

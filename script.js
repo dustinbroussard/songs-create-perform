@@ -17,9 +17,23 @@ App.Store = {
     }
   },
   migrate() {
-    const v = App.Store.get(App.Config.STORAGE.VERSION, "0");
+    const S = App.Config.STORAGE;
+    const v = App.Store.get(S.VERSION, "0");
+    // Migrate legacy keys to namespaced keys
+    try {
+      const legacySongs = localStorage.getItem("songs");
+      const legacySetlists = localStorage.getItem("setlists");
+      if (legacySongs && !localStorage.getItem(S.SONGS)) {
+        localStorage.setItem(S.SONGS, legacySongs);
+        localStorage.removeItem("songs");
+      }
+      if (legacySetlists && !localStorage.getItem(S.SETLISTS)) {
+        localStorage.setItem(S.SETLISTS, legacySetlists);
+        localStorage.removeItem("setlists");
+      }
+    } catch {}
     if (v !== App.Config.VERSION) {
-      App.Store.set(App.Config.STORAGE.VERSION, App.Config.VERSION);
+      App.Store.set(S.VERSION, App.Config.VERSION);
     }
   },
 };
@@ -60,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
 App.Setlists = (() => {
   const { safeParse, normalizeSetlistName } = App.Utils;
   let setlists = new Map();
-  const DB_KEY = "setlists";
+  const DB_KEY = App.Config && App.Config.STORAGE ? App.Config.STORAGE.SETLISTS : "setlists";
 
   function load() {
     try {
@@ -429,11 +443,22 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         this.addSongBtn.addEventListener("click", () => this.openSongModal());
         this.deleteAllSongsBtn.addEventListener("click", () => {
-          if (confirm("Delete ALL songs? This cannot be undone!")) {
-            this.songs = [];
-            this.saveData();
-            this.renderSongs();
+          if (!confirm("Delete ALL songs? This cannot be undone!")) return;
+          // Clear all songs
+          this.songs = [];
+          this.saveData();
+          // Optionally clear all setlists of song references
+          const alsoClearSetlists = confirm(
+            "Also clear all songs from every setlist?",
+          );
+          if (alsoClearSetlists) {
+            const setlists = App.Setlists.getAllSetlists();
+            setlists.forEach((s) => {
+              App.Setlists.updateSetlistSongs(s.id, []);
+            });
           }
+          this.renderSongs();
+          this.renderSetlists();
         });
         this.songUploadInput.addEventListener("change", (e) =>
           this.handleFileUpload(e),
@@ -572,7 +597,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Data Management
     loadData() {
-      const rawSongs = localStorage.getItem("songs");
+      const SONGS_KEY = App.Config.STORAGE.SONGS;
+      const rawSongs = localStorage.getItem(SONGS_KEY);
       this.songs = App.Utils.safeParse(rawSongs, []) || [];
       if (!Array.isArray(this.songs)) this.songs = [];
       const theme = localStorage.getItem("theme") || "dark";
@@ -580,7 +606,8 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     saveData() {
-      localStorage.setItem("songs", JSON.stringify(this.songs));
+      const SONGS_KEY = App.Config.STORAGE.SONGS;
+      localStorage.setItem(SONGS_KEY, JSON.stringify(this.songs));
     },
 
     // Lyrics Management
@@ -666,6 +693,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       this.editorSongList.addEventListener("click", (e) =>
         this.handleEditorSongClick(e),
+      );
+      this.editorSongList.addEventListener("dblclick", (e) =>
+        this.handleEditorSongDblClick(e),
       );
       // Add theme toggle button handler
       document
@@ -895,6 +925,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // Update title to reflect current setlist
+      if (this.currentSetlistTitle) {
+        this.currentSetlistTitle.textContent = `Current Setlist: ${setlist.name}`;
+      }
+
       const availableSongs = allSongs
         .filter((s) => !setlist.songs.includes(s.id))
         .sort((a, b) => a.title.localeCompare(b.title));
@@ -935,23 +970,26 @@ document.addEventListener("DOMContentLoaded", () => {
       if (this.sortableSetlist) {
         this.sortableSetlist.destroy();
       }
-      this.sortableSetlist = Sortable.create(
-        this.currentSetlistSongsContainer,
-        {
-          animation: 150,
-          handle: ".drag-handle",
-          ghostClass: "drag-ghost",
-          delay: 0,
-          touchStartThreshold: 2,
-          onEnd: (evt) => {
-            const newOrder = Array.from(
-              this.currentSetlistSongsContainer.querySelectorAll(".song-item"),
-            ).map((item) => item.dataset.id);
-            App.Setlists.updateSetlistSongs(this.currentSetlistId, newOrder);
-            this.renderSetlistSongs();
+      // Enable drag-and-drop ordering if Sortable is available
+      if (window.Sortable) {
+        this.sortableSetlist = Sortable.create(
+          this.currentSetlistSongsContainer,
+          {
+            animation: 150,
+            handle: ".drag-handle",
+            ghostClass: "drag-ghost",
+            delay: 0,
+            touchStartThreshold: 2,
+            onEnd: (evt) => {
+              const newOrder = Array.from(
+                this.currentSetlistSongsContainer.querySelectorAll(".song-item"),
+              ).map((item) => item.dataset.id);
+              App.Setlists.updateSetlistSongs(this.currentSetlistId, newOrder);
+              this.renderSetlistSongs();
+            },
           },
-        },
-      );
+        );
+      }
     },
 
     openSetlistModal(mode = "add") {
@@ -1148,7 +1186,7 @@ document.addEventListener("DOMContentLoaded", () => {
       this.editorSongList.innerHTML = songs
         .map(
           (song) => `
-                <div class="song-item" data-id="${song.id}">
+                <div class="song-item${this.currentSongId === song.id ? " selected" : ""}" data-id="${song.id}">
                     <span>${song.title}</span>
                     <button class="btn primary open-editor-btn" title="Edit This Song"><i class="fas fa-pen"></i></button>
                 </div>
@@ -1159,10 +1197,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleEditorSongClick(e) {
       const item = e.target.closest(".song-item");
-      if (item) this.currentSongId = item.dataset.id;
-      if (e.target.closest(".open-editor-btn") && item) {
-        this.startEditorWithSong(item.dataset.id);
+      if (!item) return;
+      // Select the row
+      this.currentSongId = item.dataset.id;
+      this.editorSongList
+        .querySelectorAll(".song-item.selected")
+        .forEach((n) => n.classList.remove("selected"));
+      item.classList.add("selected");
+      // If the explicit edit button was clicked, open immediately
+      if (e.target.closest(".open-editor-btn")) {
+        this.startEditorWithSong(this.currentSongId);
       }
+    },
+
+    // Double-click anywhere on a row to open in editor
+    handleEditorSongDblClick(e) {
+      const item = e.target.closest(".song-item");
+      if (!item) return;
+      this.currentSongId = item.dataset.id;
+      this.startEditorWithSong(this.currentSongId);
     },
 
     // Helper for downloading a file

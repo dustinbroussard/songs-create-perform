@@ -317,7 +317,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       this.setupResizeObserver();
-      this.isChordsVisible = window.CONFIG.chordsModeEnabled;
+      // Preserve default visibility when config flag is undefined
+      if (window.CONFIG && Object.prototype.hasOwnProperty.call(window.CONFIG, 'chordsModeEnabled')) {
+        this.isChordsVisible = !!window.CONFIG.chordsModeEnabled;
+      }
       this.updateChordsVisibility();
     },
 
@@ -358,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     },
     loadData() {
-      this.songs = safeParse(localStorage.getItem("songs"), []);
+      this.songs = safeParse(localStorage.getItem(App.Config.STORAGE.SONGS), []);
       const theme = localStorage.getItem("theme") || "dark";
       document.documentElement.dataset.theme = theme;
     },
@@ -1070,7 +1073,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (songId) {
         this.currentEditorSongIndex = this.editorSongs.findIndex(
-          (s) => s.id === songId,
+          (s) => String(s.id) === String(songId),
         );
         if (this.currentEditorSongIndex !== -1) {
           this.currentSong = this.editorSongs[this.currentEditorSongIndex];
@@ -1172,7 +1175,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const idx = this.songs.findIndex((s) => s.id === this.currentSong.id);
           if (idx !== -1) {
             this.songs.splice(idx, 1);
-            this.safeLocalStorageSet("songs", JSON.stringify(this.songs));
+            this.safeLocalStorageSet(App.Config.STORAGE.SONGS, JSON.stringify(this.songs));
           }
           this.hasUnsavedChanges = false;
           this.showSaveStatus("saved");
@@ -1202,7 +1205,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
         const ok = this.safeLocalStorageSet(
-          "songs",
+          App.Config.STORAGE.SONGS,
           JSON.stringify(this.songs),
         );
         if (ok) {

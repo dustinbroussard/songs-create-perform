@@ -298,11 +298,11 @@ const saveCurrentSongWithMetadata = (song) => {
     song.lastEditedAt = new Date().toISOString();
     
     // Save to localStorage
-    const songs = JSON.parse(localStorage.getItem('songs') || '[]');
+    const songs = JSON.parse(localStorage.getItem(App.Config.STORAGE.SONGS) || '[]');
     const songIndex = songs.findIndex(s => s.id === song.id);
     if (songIndex !== -1) {
         songs[songIndex] = song;
-        localStorage.setItem('songs', JSON.stringify(songs));
+        localStorage.setItem(App.Config.STORAGE.SONGS, JSON.stringify(songs));
     }
     
     return song;

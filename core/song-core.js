@@ -104,7 +104,10 @@
 
   // ---------- STORAGE ----------
   const DB = {
-    keys: Object.freeze({ songs: 'songs', setlists: 'setlists' }),
+    keys: Object.freeze({
+      songs: (typeof App !== 'undefined' && App.Config && App.Config.STORAGE && App.Config.STORAGE.SONGS) ? App.Config.STORAGE.SONGS : 'songs',
+      setlists: (typeof App !== 'undefined' && App.Config && App.Config.STORAGE && App.Config.STORAGE.SETLISTS) ? App.Config.STORAGE.SETLISTS : 'setlists'
+    }),
 
     loadSongs(){
       try { return JSON.parse(localStorage.getItem(DB.keys.songs) || '[]'); }
@@ -160,4 +163,3 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = SongCore;
   else window.SongCore = SongCore;
 })();
-

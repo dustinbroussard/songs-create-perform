@@ -16,6 +16,8 @@ self.addEventListener("install", (event) => {
           "/style.css",
           "/editor/editor.css",
           "/performance/performance.css",
+          "/lib/fuse.js",
+          "/lib/Sortable.min.js",
           "/config.js",
           "/utils.js",
           "/script.js",

@@ -545,6 +545,16 @@ img, video, iframe {
     background-color: var(--bg-hover);
 }
 
+/* Selected song row (Editor tab and lists) */
+.song-item.selected {
+    background-color: var(--bg-active);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-glow), var(--shadow-md);
+}
+.song-item.selected:hover {
+    background-color: var(--bg-active);
+}
+
 .setlist-editor {
     display: flex;
     gap: 0.8rem; /* Reduced gap for a tighter look */
@@ -826,6 +836,13 @@ img, video, iframe {
 .song-container .song-item .song-controls .btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+/* Selected inside setlist columns */
+.song-container .song-item.selected {
+    background: var(--bg-active);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-glow), var(--shadow-sm);
 }
 
 /* Empty state messages */
