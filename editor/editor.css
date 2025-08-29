@@ -70,6 +70,7 @@
 #font-controls {
     display: flex;
     align-items: center;
+    color: var(--bg-secondary);
     gap: 0.25rem;
     background: var(--accent-primary);
     padding: 0.25rem 0.5rem;
@@ -79,7 +80,7 @@
 #font-controls button {
     background: var(--accent-secondary);
     border: none;
-    color: #fff;
+    color: var(--bg-secondary);
     font-size: 1rem;
     cursor: pointer;
     padding: 0 0.4rem;
@@ -95,7 +96,7 @@
     min-width: 2.5rem;
     text-align: center;
     font-size: 0.9rem;
-    color: #ccc;
+    color: var(--bg-secondary);
 }
 
 /* Responsive tweaks */
@@ -435,10 +436,11 @@
 
 .modal-select {
   width: 100%;
+  margin-top: 0.5rem;
   padding: 0.5rem;
   border: 1px solid var(--border);
   border-radius: var(--border-radius-base);
-  background: var(--bg-tertiary);
+  background: var(--bg-primary);
   color: var(--text-primary);
 }
 
@@ -471,7 +473,7 @@
 .modal-action-btn,
 .modal-copy-btn {
   background: var(--accent-primary);
-  color: white;
+  color: var(--bg-primary);
   border: none;
   padding: 0.6rem 1rem;
   border-radius: var(--border-radius-base);
@@ -869,6 +871,49 @@
 
 #ryhme-mode-toggle {
     margin-left: 5rem;
+}
+
+
+.metadata-editor {
+    background: var(--bg-secondary);
+    margin: 8% auto;
+    padding: 0rem 0.2rem 1.2rem 0.2rem;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+    animation: neon-modal-pop 0.44s cubic-bezier(0.6,0,0.2,1);
+}
+
+.metadata-row {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: var(--border-radius-base);
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.metadata-text {
+   font-size: 0.8rem;
+   margin-top: 0.1rem;
+}
+
+#exit-editor-btn {
+    padding: 0.1em 0.45em;
+    background: var(--danger);
+    height: 2rem;
+    width: 2rem;
+    color: var(--bg-primary);
+    border-radius: 50%;
+    font-size: 1em;
+    min-width: 24px;
+    min-height: 24px;
 }
 
 .btn.icon-btn {

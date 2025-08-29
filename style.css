@@ -221,10 +221,8 @@ img, video, iframe {
 }
 
 .icon-btn {
-  background: none;
   border: none;
   font-size: 1.5rem;
-  color: var(--accent-secondary, #aaa);
   cursor: pointer;
   opacity: 0.85;
   transition: color 0.22s, opacity 0.15s;
@@ -310,6 +308,8 @@ img, video, iframe {
     #tab-toolbar {
         gap: 0.8rem; /* Reduced gap in toolbar */
         padding: 0.6rem 1rem; /* Reduced padding in toolbar */
+        justify-content: center;
+
     }
 
     .search-input, .setlist-select, .btn {
@@ -448,6 +448,7 @@ img, video, iframe {
     display: flex;
     gap: var(--padding-base); /* Using base padding for gap */
     margin-bottom: 1rem;
+    justify-content: center;
     align-items: center;
 }
 
@@ -658,7 +659,7 @@ img, video, iframe {
 }
 
 .modal-content {
-    background: var(--bg-primary);
+    background: var(--bg-secondary);
     margin: 8% auto;
     padding: 2.2rem 2.2rem 1.2rem 2.2rem;
     border: 2px solid var(--accent-primary);
@@ -931,10 +932,8 @@ img, video, iframe {
         font-size: 0.85rem;
     }
     .icon-btn {
-        background: none;
         border: none;
         font-size: 0.9rem;
-        color: var(--accent-secondary, #aaa);
         cursor: pointer;
         opacity: 0.85;
         transition: color 0.22s, opacity 0.15s;
@@ -951,10 +950,8 @@ img, video, iframe {
 
 @media (max-width: 480px) {
     .icon-btn {
-        background: none;
         border: none;
         font-size: 0.9rem;
-        color: var(--accent-secondary, #aaa);
         cursor: pointer;
         opacity: 0.85;
         transition: color 0.22s, opacity 0.15s;
@@ -1178,17 +1175,22 @@ img, video, iframe {
 }
 
 #song-modal,
-#setlist-modal {
+#setlist-modal,
+#export-setlist-modal {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
     z-index: 9999 !important;
-    display: none;
+    /* display managed by .modal/.is-open classes */
     align-items: center;
     justify-content: center;
     background: rgba(0,0,0,0.8) !important;
+}
+
+#export-setlist-modal.is-open {
+    display: flex !important;
 }
 
 /* Optional: Only show auto-scroll button in performance mode */
@@ -1224,7 +1226,7 @@ img, video, iframe {
 #autoscroll-delay-modal .modal-content {
   position: relative;
   z-index: 20001;
-  background: var(--bg-primary, #222);
+  background: var(--bg-secondary, #222);
 }
 
 /* Stack both buttons on the right side with spacing */
@@ -1312,124 +1314,6 @@ img, video, iframe {
   font-family: inherit;
 }
 
-#theme-modal {
-  z-index: 20000 !important;
-}
-#theme-modal .modal-content {
-  z-index: 20100 !important;
-  width: 90%;
-  margin: 0 auto;
-  margin-top: 4vh !important;    /* Gives a 4% vertical gap from the top */
-  border-radius: 18px;
-}
-#theme-modal .theme-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7em;
-  justify-content: center;
-  margin-bottom: 1.2em;
-}
-#theme-modal .theme-btn {
-  padding: 0.7em 1.5em;
-  background: var(--accent-primary);
-  color: var(--bg-primary);
-  border: none;
-  border-radius: 14px;
-  font-size: 1.13em;
-  font-weight: bold;
-  box-shadow: 0 2px 12px var(--accent-glow, rgba(0,0,0,0.13));
-  transition: background 0.18s, color 0.18s, transform 0.15s;
-  cursor: pointer;
-  margin: 0.17em 0.29em;
-  outline: none;
-}
-
-#theme-modal .theme-btn {
-  min-width: 9.4em;
-  max-width: 9.4em;
-  text-align: center;
-  justify-content: center;
-  padding: 0.72em 0;
-  font-size: 1.13em;
-  font-weight: bold;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  margin: 0.17em 0.29em;
-}
-
-
-#theme-modal .theme-btn:hover, #theme-modal .theme-btn:focus {
-  background: var(--accent-hover, #fff);
-  color: var(--accent-primary, #222);
-  transform: scale(1.08);
-  box-shadow: 0 6px 16px var(--accent-glow, rgba(0,0,0,0.23));
-}
-#theme-modal .theme-btn:active {
-  background: var(--accent-active, #bbb);
-  color: var(--accent-primary, #222);
-  transform: scale(0.97);
-}
-#close-theme-modal.btn {
-  background: var(--danger, #ff0044);
-  color: #fff;
-  border-radius: 14px;
-  font-weight: bold;
-  font-size: 1.09em;
-  margin-top: 1.1em;
-  transition: background 0.18s, color 0.18s, transform 0.14s;
-  box-shadow: 0 0 13px 2px #9006, 0 0 0 var(--accent-glow);
-  letter-spacing: 0.02em;
-}
-#close-theme-modal.btn:hover,
-#close-theme-modal.btn:focus {
-  background: #fff;
-  color: var(--danger, #d00020);
-  box-shadow: 0 0 24px 4px var(--danger, #d00020), 0 0 0 var(--accent-glow);
-  transform: scale(1.03);
-}
-
-/* === Custom colors for each theme button in the theme picker === */
-#theme-modal .theme-btn[data-theme="default-dark"] {
-  background: #191b1f;
-  color: #fff;
-  border: 1.5px solid #333;
-}
-#theme-modal .theme-btn[data-theme="default-light"] {
-  background: #fff;
-  color: #222;
-  border: 1.5px solid #bbb;
-}
-#theme-modal .theme-btn[data-theme="blue-dark"] {
-  background: #072366;
-  color: #fff;
-  border: 1.5px solid #369;
-}
-#theme-modal .theme-btn[data-theme="blue-light"] {
-  background: #e8f2ff;
-  color: #0051a8;
-  border: 1.5px solid #7bb5ff;
-}
-#theme-modal .theme-btn[data-theme="red-dark"] {
-  background: #720606;
-  color: #fff;
-  border: 1.5px solid #ff2c2c;
-}
-#theme-modal .theme-btn[data-theme="red-light"] {
-  background: #ffe6e6;
-  color: #b80000;
-  border: 1.5px solid #e98282;
-}
-
-/* Keep hover/focus states consistent, but boost border on focus */
-#theme-modal .theme-btn:hover,
-#theme-modal .theme-btn:focus {
-  outline: 2.5px solid var(--accent-primary, #fff);
-  outline-offset: 1px;
-  border-color: var(--accent-primary, #fff) !important;
-  box-shadow: 0 0 18px 2px var(--accent-glow, #fff4);
-  transform: scale(1.09);
-}
 
 /* === HIGH-CONTRAST ACTIVE TAB FOR ALL THEMES === */
 .app-nav .nav-button.active {

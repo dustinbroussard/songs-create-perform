@@ -516,34 +516,7 @@ document.addEventListener("DOMContentLoaded", () => {
               alert("No setlist selected!");
               return;
             }
-            const format = prompt("Export format? (json/txt/csv)", "json");
-            if (!format) return;
-            const content = App.Setlists.exportSetlist(
-              this.currentSetlistId,
-              this.songs,
-              format.trim().toLowerCase(),
-            );
-            if (content) {
-              let ext =
-                format === "csv" ? "csv" : format === "txt" ? "txt" : "json";
-              const setlist = App.Setlists.getSetlistById(
-                this.currentSetlistId,
-              );
-              const name = setlist
-                ? setlist.name.replace(/\s+/g, "_")
-                : "setlist";
-              this.downloadFile(
-                `${name}.${ext}`,
-                content,
-                ext === "json"
-                  ? "application/json"
-                  : ext === "csv"
-                    ? "text/csv"
-                    : "text/plain",
-              );
-            } else {
-              alert("Export failed.");
-            }
+            this.openExportSetlistModal();
           });
         document
           .getElementById("import-setlist-file")
@@ -597,20 +570,99 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
     },
+    openExportSetlistModal() {
+      const modal = document.getElementById('export-setlist-modal');
+      const cancelBtn = document.getElementById('export-setlist-cancel');
+      const confirmBtn = document.getElementById('export-setlist-confirm');
+      const formatSel = document.getElementById('export-setlist-format');
+      if (!modal || !cancelBtn || !confirmBtn || !formatSel) return;
+      modal.classList.add('is-open');
+      const close = () => { modal.classList.remove('is-open'); };
+      cancelBtn.onclick = close;
+      const pdfOpts = document.getElementById('export-setlist-pdf-options');
+      const includeChordsCb = document.getElementById('export-setlist-include-chords');
+      const syncPdfOpts = () => { if (pdfOpts) pdfOpts.style.display = (formatSel.value === 'pdf') ? 'block' : 'none'; };
+      formatSel.onchange = syncPdfOpts; syncPdfOpts();
+      confirmBtn.onclick = () => {
+        const fmt = (formatSel.value || 'json').toLowerCase();
+        const opts = { includeChords: !!includeChordsCb?.checked };
+        this.exportCurrentSetlist(fmt, opts);
+        close();
+      };
+    },
+
+    exportCurrentSetlist(format = 'json', opts = {}) {
+      if (!this.currentSetlistId) { alert('No setlist selected!'); return; }
+      const setlist = App.Setlists.getSetlistById(this.currentSetlistId);
+      if (!setlist) { alert('Setlist not found'); return; }
+      if (format === 'pdf') {
+        this.exportSetlistToPdf(setlist, opts);
+        return;
+      }
+      const content = App.Setlists.exportSetlist(this.currentSetlistId, this.songs, format);
+      if (!content) { alert('Export failed.'); return; }
+      const name = (setlist.name || 'setlist').replace(/\s+/g, '_');
+      const ext = format === 'csv' ? 'csv' : format === 'txt' ? 'txt' : 'json';
+      const mime = ext === 'json' ? 'application/json' : (ext === 'csv' ? 'text/csv' : 'text/plain');
+      this.downloadFile(`${name}.${ext}`, content, mime);
+    },
+
+    exportSetlistToPdf(setlist, { includeChords = true } = {}) {
+      const ids = Array.isArray(setlist.songs) ? setlist.songs : [];
+      const songs = ids.map((id) => (this.songs || []).find((s) => s.id === id)).filter(Boolean);
+      const title = `${setlist.name} — Setlist`;
+      const css = `
+        @page { margin: 1in; }
+        body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color: #111; }
+        .song-page { page-break-before: always; }
+        .song-page:first-child { page-break-before: avoid; }
+        h1 { font-size: 20pt; margin: 0 0 12pt; }
+        pre { white-space: pre-wrap; font-family: inherit; font-size: 12pt; line-height: 1.4; margin: 0; }
+        header.setlist-title { display: none; }
+        @media screen { header.setlist-title { display: block; margin-bottom: 16px; font-weight: 600; } }
+      `;
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>${this.escapeHtml(title)}</title><style>${css}</style></head><body>
+        <header class="setlist-title">${this.escapeHtml(setlist.name)}</header>
+        ${songs.map((s)=>{
+          const lyr = String(s.lyrics||'');
+          const chr = String(s.chords||'');
+          const body = (includeChords && chr.trim()) ? (App.Utils.enforceAlternating(lyr, chr)) : lyr;
+          return `<section class="song-page"><h1>${this.escapeHtml(s.title||'Untitled')}</h1><pre>${this.escapeHtml(body)}</pre></section>`;
+        }).join('')}
+      </body></html>`;
+      const w = window.open('', '_blank');
+      if (!w) { alert('Popup blocked. Please allow popups to export PDF.'); return; }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      // give the browser a moment to render before print
+      setTimeout(() => { try { w.print(); } catch {} }, 200);
+    },
+
+    escapeHtml(s='') { return String(s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); },
 
     // Core App Initialization
     init() {
       this.loadData();
-      this.renderToolbar("songs");
       this.setlistSelect = document.getElementById("setlist-select");
       this.performanceSetlistSelect = document.getElementById(
         "performance-setlist-select",
       );
       this.setupEventListeners();
-      this.renderSongs();
+      // Activate initial tab based on URL hash, default to songs
+      const initial = (window.location.hash || "#songs").replace('#', '') || 'songs';
+      this.activateTab(initial);
       if (this.setlistSelect && this.performanceSetlistSelect) {
         this.renderSetlists();
       }
+      // Keep tab in sync if hash changes
+      window.addEventListener('hashchange', () => {
+        const tab = (window.location.hash || "#songs").replace('#', '') || 'songs';
+        this.activateTab(tab);
+      });
     },
 
     // Data Management
@@ -677,16 +729,12 @@ document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners() {
       this.navButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
-          this.tabs.forEach((tab) => tab.classList.remove("active"));
-          this.navButtons.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
           const tabName = btn.getAttribute("data-tab");
-          document.getElementById(tabName).classList.add("active");
-          this.renderToolbar(tabName);
-          if (tabName === "songs") this.renderSongs();
-          if (tabName === "setlists") this.renderSetlists();
-          if (tabName === "performance") this.renderPerformanceTab();
-          if (tabName === "editor") this.renderEditorTab();
+          // Update hash for deep-linking and centralized activation
+          if (window.location.hash !== `#${tabName}`) {
+            history.replaceState(null, '', `#${tabName}`);
+          }
+          this.activateTab(tabName);
         });
       });
 
@@ -727,6 +775,22 @@ document.addEventListener("DOMContentLoaded", () => {
           document.documentElement.dataset.theme = newTheme;
           localStorage.setItem("theme", newTheme);
         });
+    },
+
+    // Centralized tab activation logic used by clicks and initial load
+    activateTab(tabName) {
+      if (!tabName) return;
+      this.tabs.forEach((tab) => tab.classList.remove("active"));
+      this.navButtons.forEach((b) => b.classList.remove("active"));
+      const targetTab = document.getElementById(tabName);
+      const targetBtn = Array.from(this.navButtons).find(b => b.getAttribute('data-tab') === tabName);
+      if (targetTab) targetTab.classList.add("active");
+      if (targetBtn) targetBtn.classList.add("active");
+      this.renderToolbar(tabName);
+      if (tabName === "songs") this.renderSongs();
+      if (tabName === "setlists") this.renderSetlists();
+      if (tabName === "performance") this.renderPerformanceTab();
+      if (tabName === "editor") this.renderEditorTab();
     },
 
     // Song UI and Actions
@@ -789,11 +853,11 @@ document.addEventListener("DOMContentLoaded", () => {
       this.songTitleInput.addEventListener("input", validate);
       validate();
 
-      this.songModal.style.display = "block";
+      this.songModal.classList.add('is-open');
     },
 
     closeSongModal() {
-      this.songModal.style.display = "none";
+      this.songModal.classList.remove('is-open');
     },
 
     saveSong() {
@@ -1025,12 +1089,12 @@ document.addEventListener("DOMContentLoaded", () => {
         this.setlistModalTitle.textContent = "New Setlist";
         this.setlistNameInput.value = "";
       }
-      this.setlistModal.style.display = "block";
+      this.setlistModal.classList.add('is-open');
       this.setlistNameInput.focus();
     },
 
     closeSetlistModal() {
-      this.setlistModal.style.display = "none";
+      this.setlistModal.classList.remove('is-open');
       this.modalMode = null;
     },
 
@@ -1076,6 +1140,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handleSetlistSelectChange(e) {
       this.currentSetlistId = e.target.value || null;
+      try { localStorage.setItem('hrsm:currentSetlistId', this.currentSetlistId || ''); } catch {}
       this.renderSetlistSongs();
     },
 
@@ -1112,6 +1177,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     handlePerformanceSetlistChange() {
       this.performanceSetlistId = this.performanceSetlistSelect.value || null;
+      try { localStorage.setItem('hrsm:currentSetlistId', this.performanceSetlistId || ''); } catch {}
       this.renderPerformanceSongList();
     },
 
@@ -1143,6 +1209,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       }
 
+      const inSetlist = !!this.performanceSetlistId;
       this.performanceSongList.innerHTML = songs
         .map(
           (song) => `
@@ -1153,6 +1220,10 @@ document.addEventListener("DOMContentLoaded", () => {
             `,
         )
         .join("");
+      // Update tooltip text to reflect context
+      this.performanceSongList.querySelectorAll('.perform-song-btn').forEach(btn => {
+        btn.title = inSetlist ? 'Perform in Setlist' : 'Perform Single';
+      });
     },
 
     handlePerformanceSongClick(e) {
@@ -1160,7 +1231,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const songItem = e.target.closest(".song-item");
       if (!songItem) return;
       const songId = songItem.dataset.id;
-      this.startPerformanceWithSong(songId);
+      try { console.debug('[Perform click] songId=', songId); } catch {}
+      try { localStorage.setItem('hrsm:currentSongId', songId || ''); } catch {}
+      // If no setlist selected (All Songs), open single-song mode; otherwise, open within setlist
+      const sel = this.performanceSetlistSelect?.value || '';
+      this.performanceSetlistId = sel || this.performanceSetlistId || null;
+      try { console.debug('[Perform click] setlistId=', this.performanceSetlistId || '(none)'); } catch {}
+      if (!this.performanceSetlistId) {
+        this.startPerformanceSingleSong(songId);
+      } else {
+        this.startPerformanceWithSong(songId);
+      }
     },
 
     handleStartPerformance() {
@@ -1169,13 +1250,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (this.performanceSetlistId) {
         const setlist = App.Setlists.getSetlistById(this.performanceSetlistId);
         if (setlist && setlist.songs.length > 0) {
-          this.startPerformanceWithSong(setlist.songs[0]);
+          const firstSongId = setlist.songs[0];
+          try { localStorage.setItem('hrsm:currentSongId', firstSongId || ''); } catch {}
+          this.startPerformanceWithSong(firstSongId);
         } else {
           alert("No songs in selected setlist");
         }
       } else {
         if (this.songs.length > 0) {
-          this.startPerformanceWithSong(this.songs[0].id);
+          const firstSongId = this.songs[0].id;
+          try { localStorage.setItem('hrsm:currentSongId', firstSongId || ''); } catch {}
+          this.startPerformanceWithSong(firstSongId);
         } else {
           alert("No songs available");
         }
@@ -1188,6 +1273,20 @@ document.addEventListener("DOMContentLoaded", () => {
         params.set("setlistId", this.performanceSetlistId);
       }
       params.set("songId", songId);
+      try { console.debug('[Navigate Performance] url params=', params.toString()); } catch {}
+      try { localStorage.setItem('hrsm:currentSetlistId', this.performanceSetlistId || ''); } catch {}
+      try { localStorage.setItem('hrsm:currentSongId', songId || ''); } catch {}
+      window.location.href = `performance/performance.html?${params.toString()}`;
+    },
+
+    // Open performance page showing only a single song (no setlist)
+    startPerformanceSingleSong(songId) {
+      const params = new URLSearchParams();
+      params.set('songId', songId);
+      params.set('single', '1');
+      try { localStorage.setItem('hrsm:currentSongId', songId || ''); } catch {}
+      // Do not persist a setlist for single mode
+      try { localStorage.removeItem('hrsm:currentSetlistId'); } catch {}
       window.location.href = `performance/performance.html?${params.toString()}`;
     },
 
@@ -1200,6 +1299,7 @@ document.addEventListener("DOMContentLoaded", () => {
         params.set("new", "1");
       }
       const query = params.toString();
+      try { console.debug('[Navigate Editor] songId=', songId, 'query=', query); } catch {}
       window.location.href = `editor/editor.html?${query}`;
     },
 
@@ -1226,16 +1326,9 @@ document.addEventListener("DOMContentLoaded", () => {
     handleEditorSongClick(e) {
       const item = e.target.closest(".song-item");
       if (!item) return;
-      // Select the row
-      this.currentSongId = item.dataset.id;
-      this.editorSongList
-        .querySelectorAll(".song-item.selected")
-        .forEach((n) => n.classList.remove("selected"));
-      item.classList.add("selected");
-      // If the explicit edit button was clicked, open immediately
-      if (e.target.closest(".open-editor-btn")) {
-        this.startEditorWithSong(this.currentSongId);
-      }
+      const id = item.dataset.id;
+      this.currentSongId = id;
+      this.startEditorWithSong(id);
     },
 
     // Double-click anywhere on a row to open in editor

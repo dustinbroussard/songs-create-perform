@@ -1654,7 +1654,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
       if (this.resizeObserver) this.resizeObserver.disconnect();
-      window.location.href = "../index.html";
+      window.location.href = "../index.html#editor";
     },
 
     scrollToTop() {

@@ -173,7 +173,7 @@
     </div>
 
     <div id="copy-modal" class="modal-overlay">
-      <div class="modal">
+      <div class="modal-content">
         <h2>Copy Options</h2>
         <button class="modal-copy-btn" data-copy-type="raw">
           <i class="fas fa-align-left"></i> Raw Lyrics
@@ -197,7 +197,7 @@
     </div>
 
     <div id="editor-modal" class="modal-overlay">
-      <div class="modal">
+      <div class="modal-content">
         <h2>Editor Options</h2>
         <button id="toggle-chords-btn" class="modal-action-btn">
           <i class="fas fa-guitar"></i> Toggle Chords
@@ -241,7 +241,7 @@
     </div>
 
     <div id="ai-tools-modal" class="modal-overlay">
-      <div class="modal">
+      <div class="modal-content">
         <h2>AI Tools</h2>
         <textarea
           id="ai-additional-notes"
@@ -295,7 +295,7 @@
     </div>
 
     <div id="add-section-modal" class="modal-overlay">
-      <div class="modal">
+      <div class="modal-content">
         <h2>Add Section</h2>
         <button class="modal-action-btn" data-section="[Intro]">
           <i class="fas fa-play"></i> Intro
@@ -329,7 +329,7 @@
           id="metadata-close-btn"
           class="metadata-close-btn"
           title="Close"
-        >
+        > 
           <i class="fas fa-times"></i>
         </button>
       </h3>
@@ -337,12 +337,12 @@
       <div class="metadata-editor">
         <div class="metadata-row">
           <label for="song-title-meta">Title:</label>
-          <input type="text" id="song-title-meta" placeholder="Song title" />
+          <input type="text" id="song-title-meta" class="modal-select" placeholder="Song title" />
         </div>
 
         <div class="metadata-row">
           <label for="song-key">Key:</label>
-          <select id="song-key">
+          <select id="song-key" class="modal-select">
             <option value="">Select Key</option>
             <option value="C">C</option>
             <option value="C#">C#</option>
@@ -361,12 +361,12 @@
 
         <div class="metadata-row">
           <label for="song-tempo-meta">Tempo (BPM):</label>
-          <input type="number" id="song-tempo-meta" min="60" max="240" />
+          <input type="number" id="song-tempo-meta" class="modal-select" min="60" max="240" />
         </div>
 
         <div class="metadata-row">
           <label for="song-time-signature">Time Signature:</label>
-          <select id="song-time-signature">
+          <select id="song-time-signature" class="modal-select">
             <option value="4/4">4/4</option>
             <option value="3/4">3/4</option>
             <option value="2/4">2/4</option>
@@ -377,7 +377,7 @@
 
         <div class="metadata-row">
           <label for="song-tags">Tags:</label>
-          <input type="text" id="song-tags" placeholder="rock, ballad, easy" />
+          <input type="text" id="song-tags" class="modal-select" placeholder="rock, ballad, easy" />
           <small>Separate tags with commas</small>
         </div>
 
@@ -385,22 +385,23 @@
           <label for="song-notes">Performance Notes:</label>
           <textarea
             id="song-notes"
+            class="modal-select"
             placeholder="Structure, performance notes, etc."
             rows="4"
           ></textarea>
         </div>
 
-        <div class="metadata-row">
+        <div class="metadata-text">
           <label>Created:</label>
           <span id="song-created" class="metadata-info"></span>
         </div>
 
-        <div class="metadata-row">
+        <div class="metadata-text">
           <label>Last Edited:</label>
           <span id="song-edited-meta" class="metadata-info"></span>
         </div>
 
-        <div class="metadata-row">
+        <div class="icon-btn">
           <button
             id="export-single-song"
             class="btn"

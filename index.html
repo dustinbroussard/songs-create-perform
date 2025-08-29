@@ -125,7 +125,7 @@
           </div>
         </section>
       </main>
-      <div id="song-modal">
+      <div id="song-modal" class="modal">
         <div class="modal-content">
           <h2 id="song-modal-title">Add Song</h2>
           <input type="text" id="song-title-input" placeholder="Song Title" />
@@ -142,7 +142,7 @@
         </div>
       </div>
 
-      <div id="setlist-modal">
+      <div id="setlist-modal" class="modal">
         <div class="modal-content">
           <h2 id="setlist-modal-title">New Setlist</h2>
           <input
@@ -153,6 +153,34 @@
           <div class="modal-actions">
             <button id="save-setlist-btn" class="btn primary">Save</button>
             <button id="cancel-setlist-btn" class="btn">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="export-setlist-modal" class="modal">
+        <div class="modal-content">
+          <h2>Export Setlist</h2>
+          <div class="metadata-row">
+            <label for="export-setlist-format">Format:</label>
+            <select id="export-setlist-format">
+              <option value="json">JSON (data)</option>
+              <option value="txt">Text (titles)</option>
+              <option value="csv">CSV (titles,lyrics)</option>
+              <option value="pdf">PDF (print)</option>
+            </select>
+          </div>
+          <div id="export-setlist-pdf-options" class="metadata-row" style="display:none">
+            <label for="export-setlist-include-chords">PDF Options:</label>
+            <div>
+              <label style="display:flex; align-items:center; gap:0.5rem;">
+                <input type="checkbox" id="export-setlist-include-chords" checked>
+                Include chords (if available)
+              </label>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button id="export-setlist-confirm" class="btn primary">Export</button>
+            <button id="export-setlist-cancel" class="btn">Cancel</button>
           </div>
         </div>
       </div>

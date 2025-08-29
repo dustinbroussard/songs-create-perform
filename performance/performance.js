@@ -147,8 +147,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Load performance state from query parameters
         loadPerformanceState() {
             const params = new URLSearchParams(window.location.search);
+            const isSingle = params.get('single') === '1';
             this.performanceSetlistId = params.get('setlistId') || null;
-            const songId = params.get('songId');
+            const songId = params.get('songId') || (localStorage.getItem('hrsm:currentSongId') || null);
+            this._explicitSongParam = params.has('songId');
+            try { console.debug('[Performance load] setlistId=', this.performanceSetlistId, 'songId=', songId, 'single=', isSingle); } catch {}
+
+            // Single-song mode takes precedence and ignores setlist
+            if (isSingle && songId) {
+                const allSongs = safeParse(localStorage.getItem(App.Config.STORAGE.SONGS), []);
+                const only = allSongs.find(s => String(s.id) === String(songId));
+                this.performanceSongs = only ? [only] : [];
+                this.currentPerformanceSongIndex = 0;
+                return;
+            }
+
+            if (!this.performanceSetlistId) {
+              const savedSetlist = localStorage.getItem('hrsm:currentSetlistId');
+              this.performanceSetlistId = savedSetlist || null;
+            }
             if (this.performanceSetlistId) {
                 const setlistRaw = localStorage.getItem(App.Config.STORAGE.SETLISTS);
                 if (setlistRaw) {
@@ -173,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         maybeResumeSetlist() {
+            if (this._explicitSongParam) return; // honor explicit song selection from query params
             const lastPerfRaw = localStorage.getItem('lastPerformance');
             const lastPerf = safeParse(lastPerfRaw, null);
             // Only prompt if we're entering the SAME setlist as before, and it wasn't at the beginning
