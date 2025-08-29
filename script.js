@@ -459,7 +459,8 @@ document.addEventListener("DOMContentLoaded", () => {
         this.songSearchInput.addEventListener("input", () =>
           this.renderSongs(),
         );
-        this.addSongBtn.addEventListener("click", () => this.openSongModal());
+        // Add Song should open a blank template in the dedicated editor
+        this.addSongBtn.addEventListener("click", () => this.startEditorWithSong(null));
         this.deleteAllSongsBtn.addEventListener("click", () => {
           if (!confirm("Delete ALL songs? This cannot be undone!")) return;
           // Clear all songs
@@ -651,18 +652,25 @@ document.addEventListener("DOMContentLoaded", () => {
       this.performanceSetlistSelect = document.getElementById(
         "performance-setlist-select",
       );
-      this.setupEventListeners();
+      // Set up listeners; internal handlers guard missing optional elements
+      if (this.songList || this.availableSongsContainer || this.currentSetlistSongsContainer) {
+        this.setupEventListeners();
+      }
       // Activate initial tab based on URL hash, default to songs
       const initial = (window.location.hash || "#songs").replace('#', '') || 'songs';
-      this.activateTab(initial);
+      if (document.getElementById('main')) {
+        this.activateTab(initial);
+      }
       if (this.setlistSelect && this.performanceSetlistSelect) {
         this.renderSetlists();
       }
       // Keep tab in sync if hash changes
-      window.addEventListener('hashchange', () => {
-        const tab = (window.location.hash || "#songs").replace('#', '') || 'songs';
-        this.activateTab(tab);
-      });
+      if (document.getElementById('main')) {
+        window.addEventListener('hashchange', () => {
+          const tab = (window.location.hash || "#songs").replace('#', '') || 'songs';
+          this.activateTab(tab);
+        });
+      }
     },
 
     // Data Management
@@ -738,8 +746,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
 
-      this.saveSongBtn.onclick = () => this.saveSong();
-      this.cancelSongBtn.onclick = () => this.closeSongModal();
+      // Guard old modal handlers as modal is removed
+      if (this.saveSongBtn) this.saveSongBtn.onclick = () => this.saveSong();
+      if (this.cancelSongBtn) this.cancelSongBtn.onclick = () => this.closeSongModal();
       this.saveSetlistBtn.addEventListener("click", () => this.saveSetlist());
       this.cancelSetlistBtn.addEventListener("click", () =>
         this.closeSetlistModal(),
@@ -757,12 +766,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const item = e.target.closest(".song-item");
         if (item) this.currentSongId = item.dataset.id;
       });
-      this.editorSongList.addEventListener("click", (e) =>
-        this.handleEditorSongClick(e),
-      );
-      this.editorSongList.addEventListener("dblclick", (e) =>
-        this.handleEditorSongDblClick(e),
-      );
+      if (this.editorSongList) {
+        this.editorSongList.addEventListener("click", (e) =>
+          this.handleEditorSongClick(e),
+        );
+        this.editorSongList.addEventListener("dblclick", (e) =>
+          this.handleEditorSongDblClick(e),
+        );
+      }
       // Add theme toggle button handler
       document
         .getElementById("theme-toggle-btn")
@@ -795,7 +806,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Song UI and Actions
     renderSongs() {
-      const query = this.songSearchInput.value.toLowerCase();
+      const query = (this.songSearchInput?.value || "").toLowerCase();
       const filteredSongs = this.searchLyrics(query).sort((a, b) =>
         a.title.localeCompare(b.title),
       );
@@ -803,7 +814,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .map(
           (song) => `
                 <div class="song-item" data-id="${song.id}">
-                    <span>${song.title}</span>
+                    <span>${this.escapeHtml(song.title)}</span>
                     <div class="song-actions">
                         <button class="btn edit-song-btn"><i class="fas fa-pen"></i></button>
                         <button class="btn danger delete-song-btn"><i class="fas fa-trash"></i></button>
@@ -817,7 +828,8 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", (e) => {
           const id = e.target.closest(".song-item").dataset.id;
           this.currentSongId = id;
-          this.openSongModal(id);
+          // Open the selected song directly in editor.html
+          this.startEditorWithSong(id);
         });
       });
 
@@ -954,6 +966,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Setlist Management
     renderSetlists() {
       const setlists = App.Setlists.getAllSetlists();
+      // Restore last selected setlist if not already set
+      if (!this.currentSetlistId) {
+        try {
+          const last = localStorage.getItem('hrsm:currentSetlistId');
+          if (last) this.currentSetlistId = last;
+        } catch {}
+      }
       if (this.setlistSelect) {
         this.setlistSelect.innerHTML =
           '<option value="">Select a setlist...</option>';
@@ -1026,7 +1045,7 @@ document.addEventListener("DOMContentLoaded", () => {
               .map(
                 (s) =>
                   `<div class="song-item" data-id="${s.id}">
-                        <span>${s.title}</span>
+                        <span>${this.escapeHtml(s.title)}</span>
                         <button class="btn add-to-setlist-btn" title="Add to Setlist"><i class="fas fa-arrow-right"></i></button>
                     </div>`,
               )
@@ -1043,7 +1062,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 (s) =>
                   `<div class="song-item sortable-setlist-song" data-id="${s.id}">
                         <span class="drag-handle" title="Drag to reorder" style="cursor:grab;"><i class="fas fa-grip-vertical"></i></span>
-                        <span class="song-title">${s.title}</span>
+                        <span class="song-title">${this.escapeHtml(s.title)}</span>
                         <div>
                             <button class="btn move-up-btn" title="Move Up"><i class="fas fa-arrow-up"></i></button>
                             <button class="btn move-down-btn" title="Move Down"><i class="fas fa-arrow-down"></i></button>
@@ -1187,7 +1206,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderPerformanceSongList() {
       let songs = [];
-      const query = this.performanceSongSearch.value.trim();
+      const query = (this.performanceSongSearch?.value || '').trim();
 
       if (this.performanceSetlistId) {
         const setlist = App.Setlists.getSetlistById(this.performanceSetlistId);
@@ -1214,7 +1233,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .map(
           (song) => `
                 <div class="song-item" data-id="${song.id}">
-                    <span>${song.title}</span>
+                    <span>${this.escapeHtml(song.title)}</span>
                     <button class="btn primary perform-song-btn" title="Perform This Song"><i class="fas fa-play"></i></button>
                 </div>
             `,
@@ -1250,9 +1269,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (this.performanceSetlistId) {
         const setlist = App.Setlists.getSetlistById(this.performanceSetlistId);
         if (setlist && setlist.songs.length > 0) {
-          const firstSongId = setlist.songs[0];
-          try { localStorage.setItem('hrsm:currentSongId', firstSongId || ''); } catch {}
-          this.startPerformanceWithSong(firstSongId);
+          // Do not pass an explicit songId so performance page can offer resume
+          try { localStorage.setItem('hrsm:currentSetlistId', this.performanceSetlistId || ''); } catch {}
+          const params = new URLSearchParams();
+          params.set('setlistId', this.performanceSetlistId);
+          window.location.href = `performance/performance.html?${params.toString()}`;
         } else {
           alert("No songs in selected setlist");
         }
@@ -1315,7 +1336,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .map(
           (song) => `
                 <div class="song-item${this.currentSongId === song.id ? " selected" : ""}" data-id="${song.id}">
-                    <span>${song.title}</span>
+                    <span>${this.escapeHtml(song.title)}</span>
                     <button class="btn primary open-editor-btn" title="Edit This Song"><i class="fas fa-pen"></i></button>
                 </div>
             `,
@@ -1377,7 +1398,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   App.Main = app;
   window.app = app;
-  app.init();
+  // Only initialize the full app on the main page where the main UI exists
+  if (document.getElementById('main')) {
+    app.init();
+  }
 
   function finishImportSetlist(name, text) {
     const result = App.Setlists.importSetlistFromText(name, text, app.songs);

@@ -1654,7 +1654,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
       if (this.resizeObserver) this.resizeObserver.disconnect();
-      window.location.href = "../index.html#editor";
+      // Return to main app; Editor tab removed, go to Songs
+      window.location.href = "../index.html#songs";
     },
 
     scrollToTop() {
