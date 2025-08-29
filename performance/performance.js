@@ -166,10 +166,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const setlistRaw = localStorage.getItem(App.Config.STORAGE.SETLISTS);
                 if (setlistRaw) {
                     const setlists = safeParse(setlistRaw, []);
-                    const setlist = setlists.find(s => s.id === this.performanceSetlistId);
+                    const setlist = setlists.find(s => String(s.id) === String(this.performanceSetlistId));
                     if (setlist) {
-                        this.performanceSongs = setlist.songs
-                            .map(id => this.songs.find(s => s.id === id))
+                        this.performanceSongs = (setlist.songs || [])
+                            .map(id => this.songs.find(s => String(s.id) === String(id)))
                             .filter(Boolean);
                     }
                 }
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.performanceSongs = this.songs;
             }
             this.currentPerformanceSongIndex = songId
-                ? this.performanceSongs.findIndex(s => s.id === songId)
+                ? this.performanceSongs.findIndex(s => String(s.id) === String(songId))
                 : 0;
             if (this.currentPerformanceSongIndex === -1) {
                 this.currentPerformanceSongIndex = 0;

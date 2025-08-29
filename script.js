@@ -1146,6 +1146,8 @@ document.addEventListener("DOMContentLoaded", () => {
     },
 
     handleStartPerformance() {
+      // Ensure we read the latest selection from the dropdown
+      this.performanceSetlistId = this.performanceSetlistSelect?.value || null;
       if (this.performanceSetlistId) {
         const setlist = App.Setlists.getSetlistById(this.performanceSetlistId);
         if (setlist && setlist.songs.length > 0) {

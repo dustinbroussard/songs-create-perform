@@ -1078,12 +1078,24 @@ document.addEventListener("DOMContentLoaded", () => {
         if (this.currentEditorSongIndex !== -1) {
           this.currentSong = this.editorSongs[this.currentEditorSongIndex];
         } else {
+          // Fallback: if songs exist, open the first one; otherwise create a new song
+          if (this.editorSongs && this.editorSongs.length > 0) {
+            this.currentEditorSongIndex = 0;
+            this.currentSong = this.editorSongs[0];
+          } else {
+            this.currentEditorSongIndex = -1;
+            this.currentSong = this.createSong("");
+          }
+        }
+      } else {
+        // No songId provided: open first song if available, else create new
+        if (this.editorSongs && this.editorSongs.length > 0) {
+          this.currentEditorSongIndex = 0;
+          this.currentSong = this.editorSongs[0];
+        } else {
           this.currentEditorSongIndex = -1;
           this.currentSong = this.createSong("");
         }
-      } else {
-        this.currentEditorSongIndex = -1;
-        this.currentSong = this.createSong("");
       }
     },
 
