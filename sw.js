@@ -1,5 +1,5 @@
 "use strict";
-const CACHE_VERSION = "v14"; // bump on SW-related changes
+const CACHE_VERSION = "v15"; // bump on SW-related changes
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
@@ -13,6 +13,7 @@ self.addEventListener("install", (event) => {
           "/index.html",
           "/editor/editor.html",
           "/performance/performance.html",
+          "/assets/offline.html",
           "/style.css",
           "/editor/editor.css",
           "/performance/performance.css",
@@ -40,8 +41,6 @@ self.addEventListener("install", (event) => {
           "/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2",
           "/assets/vendor/fontawesome/webfonts/fa-regular-400.woff2",
           "/assets/vendor/fontawesome/webfonts/fa-brands-400.woff2",
-          "/assets/vendor/fonts/neonderthaw.css",
-          "/assets/vendor/fonts/neonderthaw.woff2",
         ])
       )
       .then(() => self.skipWaiting())
@@ -66,7 +65,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.mode === "navigate") {
-    event.respondWith(fetch(req).catch(() => caches.match("/index.html")));
+    event.respondWith(
+      fetch(req).catch(() => caches.match("/assets/offline.html").then((res) => res || caches.match("/index.html")))
+    );
     return;
   }
   if (req.method === "GET" && new URL(req.url).origin === self.location.origin) {

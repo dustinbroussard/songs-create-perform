@@ -19,7 +19,7 @@
       media="(prefers-color-scheme: dark)"
       content="#000000"
     />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/manifest.webmanifest" type="application/manifest+json" />
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
     <link id="fa-cdn" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -211,18 +211,18 @@
         <button id="toggle-read-only-btn" class="modal-action-btn">
           <i class="fas fa-lock"></i> Performance Mode
         </button>
-        <div class="modal-action-btn">
-          <label for="edit-mode-select"
-            ><i class="fas fa-edit"></i> Edit Mode</label
-          >
+        <div class="modal-item">
+          <label for="edit-mode-select"><i class="fas fa-edit"></i> Edit Mode</label>
           <select id="edit-mode-select" class="modal-select">
             <option value="both">Both</option>
             <option value="lyrics">Lyrics</option>
             <option value="chords">Chords</option>
           </select>
         </div>
-        <div class="modal-action-btn">
-          <i class="fas fa-bullseye"></i> Rhyme Colors
+        <div class="modal-item">
+          <label for="rhyme-mode-toggle" style="margin:0; flex:1; display:flex; align-items:center; gap:0.5rem;">
+            <i class="fas fa-bullseye"></i> Rhyme Colors
+          </label>
           <input type="checkbox" id="rhyme-mode-toggle" />
         </div>
         <button id="save-song-btn" class="modal-action-btn">

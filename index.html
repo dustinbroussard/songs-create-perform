@@ -18,7 +18,7 @@
       media="(prefers-color-scheme: dark)"
       content="#000000"
     />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/manifest.webmanifest" type="application/manifest+json" />
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
     <link id="fa-cdn" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -42,6 +42,16 @@
   </head>
   <body>
     <div id="offline-banner" class="offline-banner" hidden>Offline mode: some features may be limited.</div>
+    <div id="install-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="modal-content">
+        <h2>Install Setlist Manager</h2>
+        <p style="margin:0; color: var(--text-secondary)">Add the app to your home screen for faster access and offline support.</p>
+        <div class="modal-actions">
+          <button id="install-accept" class="btn primary">Install</button>
+          <button id="install-dismiss" class="btn">Not now</button>
+        </div>
+      </div>
+    </div>
     <div class="main-box">
       <header class="app-header">
         <div class="header-top">

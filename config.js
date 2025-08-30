@@ -13,6 +13,19 @@ App.Config = Object.assign(
       VERSION: "hrsm:version",
     },
     UI: { AUTOSCROLL_MIN_BPM: 20, AUTOSCROLL_MAX_BPM: 240 },
+    INSTALL_PROMPT: {
+      // 'session' (default), 'daily', 'weekly' — used only if developer opts in later
+      frequency: 'session',
+      dailyIntervalMs: 24 * 60 * 60 * 1000,
+      weeklyIntervalMs: 7 * 24 * 60 * 60 * 1000,
+      storageKeys: {
+        lastShown: 'pwa:install:lastShown',
+        installed: 'pwa:install:installed',
+        // Session-scoped flags
+        acceptedSession: 'pwa:install:accepted:session',
+        dismissedSession: 'pwa:install:dismissed:session',
+      }
+    },
   },
   App.Config || {},
 );

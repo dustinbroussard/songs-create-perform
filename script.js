@@ -100,6 +100,127 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 })();
 
+// ==== PWA INSTALL PROMPT (custom modal) ====
+(() => {
+  // Helper: detect installed state (Chrome/Android + iOS Safari)
+  const isStandalone = () => {
+    const mq = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    const ios = window.navigator && (window.navigator.standalone === true);
+    return Boolean(mq || ios);
+  };
+
+  const cfg = (App.Config && App.Config.INSTALL_PROMPT) || {};
+  const keys = (cfg && cfg.storageKeys) || {};
+  const getNow = () => Date.now();
+
+  function shouldGateByFrequency() {
+    const frequency = cfg.frequency || 'session';
+    if (frequency === 'session') return true; // gating handled by session flags below
+    try {
+      const last = parseInt(localStorage.getItem(keys.lastShown) || '0', 10);
+      const now = getNow();
+      const minInterval = frequency === 'weekly' ? (cfg.weeklyIntervalMs || 7*24*60*60*1000)
+                       : (cfg.dailyIntervalMs || 24*60*60*1000);
+      return now - last >= minInterval;
+    } catch { return true; }
+  }
+
+  function markShownNow() {
+    try { localStorage.setItem(keys.lastShown, String(getNow())); } catch {}
+  }
+
+  function getModalEl() { return document.getElementById('install-modal'); }
+  function openModal() {
+    const el = getModalEl(); if (!el) return;
+    el.classList.add('is-open');
+    el.setAttribute('aria-hidden', 'false');
+  }
+  function closeModal() {
+    const el = getModalEl(); if (!el) return;
+    el.classList.remove('is-open');
+    el.setAttribute('aria-hidden', 'true');
+  }
+
+  let deferredPrompt = null;
+
+  window.addEventListener('appinstalled', () => {
+    try { localStorage.setItem(keys.installed, '1'); } catch {}
+    sessionStorage.removeItem(keys.acceptedSession);
+    sessionStorage.removeItem(keys.dismissedSession);
+    closeModal();
+  });
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Stop the mini-infobar on mobile
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // If app is installed this session or global, do not show
+    const alreadyInstalled = isStandalone() || (localStorage.getItem(keys.installed) === '1');
+    if (alreadyInstalled) return;
+
+    // Session suppression: only if user acted in this session
+    const accepted = sessionStorage.getItem(keys.acceptedSession) === '1';
+    const dismissed = sessionStorage.getItem(keys.dismissedSession) === '1';
+    if (accepted || dismissed) return;
+
+    // Frequency gate if developer changes config later
+    if (!shouldGateByFrequency()) return;
+
+    // Wire buttons if present
+    const acceptBtn = document.getElementById('install-accept');
+    const dismissBtn = document.getElementById('install-dismiss');
+    if (acceptBtn && dismissBtn) {
+      acceptBtn.onclick = async () => {
+        if (!deferredPrompt) return;
+        markShownNow();
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (outcome === 'accepted') {
+          sessionStorage.setItem(keys.acceptedSession, '1');
+        } else {
+          sessionStorage.setItem(keys.dismissedSession, '1');
+        }
+        closeModal();
+      };
+      dismissBtn.onclick = () => {
+        sessionStorage.setItem(keys.dismissedSession, '1');
+        markShownNow();
+        closeModal();
+      };
+    }
+
+    openModal();
+
+    // Close when clicking backdrop or pressing Escape
+    const modalEl = getModalEl();
+    if (modalEl) {
+      const backdropHandler = (evt) => {
+        if (evt.target === modalEl) {
+          sessionStorage.setItem(keys.dismissedSession, '1');
+          markShownNow();
+          closeModal();
+        }
+      };
+      const escHandler = (evt) => {
+        if (evt.key === 'Escape') {
+          sessionStorage.setItem(keys.dismissedSession, '1');
+          markShownNow();
+          closeModal();
+        }
+      };
+      modalEl.addEventListener('click', backdropHandler, { once: true });
+      window.addEventListener('keydown', escHandler, { once: true });
+    }
+  });
+
+  // Hide banner if app opens already installed
+  document.addEventListener('DOMContentLoaded', () => {
+    if (isStandalone()) closeModal();
+  }, { once: true });
+})();
+
 // ==== SETLIST MANAGER MODULE
 App.Setlists = (() => {
   const { safeParse, normalizeSetlistName } = App.Utils;
