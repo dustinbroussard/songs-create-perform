@@ -18,34 +18,71 @@
       media="(prefers-color-scheme: dark)"
       content="#000000"
     />
-    <link rel="manifest" href="/manifest.webmanifest" type="application/manifest+json" />
-    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
-    <link id="fa-cdn" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+    <link
+      rel="manifest"
+      href="manifest.webmanifest"
+      type="application/manifest+json"
+    />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link
+      id="fa-cdn"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      rel="stylesheet"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link id="neon-cdn" href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap" rel="stylesheet" />
+    <link
+      id="neon-cdn"
+      href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap"
+      rel="stylesheet"
+    />
     <script>
-      (function(){
-        function swapLocal(href, cdnId){
-          try{ fetch(href, { method: 'HEAD' }).then(r=>{ if(r.ok){
-            var link=document.createElement('link'); link.rel='stylesheet'; link.href=href; document.head.appendChild(link);
-            var cdn=document.getElementById(cdnId); if(cdn) { setTimeout(()=>cdn.parentNode && cdn.parentNode.removeChild(cdn), 0); }
-          }}).catch(()=>{}); }catch(e){}
+      (function () {
+        function swapLocal(href, cdnId) {
+          try {
+            fetch(href, { method: "HEAD" })
+              .then((r) => {
+                if (r.ok) {
+                  var link = document.createElement("link");
+                  link.rel = "stylesheet";
+                  link.href = href;
+                  document.head.appendChild(link);
+                  var cdn = document.getElementById(cdnId);
+                  if (cdn) {
+                    setTimeout(
+                      () => cdn.parentNode && cdn.parentNode.removeChild(cdn),
+                      0,
+                    );
+                  }
+                }
+              })
+              .catch(() => {});
+          } catch (e) {}
         }
-        swapLocal('/assets/vendor/fontawesome/css/all.min.css','fa-cdn');
-        swapLocal('/assets/vendor/fonts/neonderthaw.css','neon-cdn');
+        swapLocal("assets/vendor/fontawesome/css/all.min.css", "fa-cdn");
+        swapLocal("assets/vendor/fonts/neonderthaw.css", "neon-cdn");
       })();
     </script>
-    <script defer src="/lib/fuse.js"></script>
-    <script defer src="/lib/Sortable.min.js"></script>
-    <script defer src="/lib/mammoth.browser.min.js"></script>
+    <script defer src="lib/fuse.js"></script>
+    <script defer src="lib/Sortable.min.js"></script>
+    <script defer src="lib/mammoth.browser.min.js"></script>
   </head>
   <body>
-    <div id="offline-banner" class="offline-banner" hidden>Offline mode: some features may be limited.</div>
-    <div id="install-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="offline-banner" class="offline-banner" hidden>
+      Offline mode: some features may be limited.
+    </div>
+    <div
+      id="install-modal"
+      class="modal"
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+    >
       <div class="modal-content">
         <h2>Install Setlist Manager</h2>
-        <p style="margin:0; color: var(--text-secondary)">Add the app to your home screen for faster access and offline support.</p>
+        <p style="margin: 0; color: var(--text-secondary)">
+          Add the app to your home screen for faster access and offline support.
+        </p>
         <div class="modal-actions">
           <button id="install-accept" class="btn primary">Install</button>
           <button id="install-dismiss" class="btn">Not now</button>
@@ -96,7 +133,6 @@
           >
             <i class="fas fa-music"></i> Lyrics
           </button>
-          
         </nav>
         <div id="tab-toolbar" class="toolbar"></div>
       </header>
@@ -127,10 +163,7 @@
             <div id="performance-song-list" class="song-list"></div>
           </div>
         </section>
-
-        
       </main>
-      
 
       <div id="setlist-modal" class="modal">
         <div class="modal-content">
@@ -159,17 +192,27 @@
               <option value="pdf">PDF (print)</option>
             </select>
           </div>
-          <div id="export-setlist-pdf-options" class="metadata-row" style="display:none">
+          <div
+            id="export-setlist-pdf-options"
+            class="metadata-row"
+            style="display: none"
+          >
             <label for="export-setlist-include-chords">PDF Options:</label>
             <div>
-              <label style="display:flex; align-items:center; gap:0.5rem;">
-                <input type="checkbox" id="export-setlist-include-chords" checked>
+              <label style="display: flex; align-items: center; gap: 0.5rem">
+                <input
+                  type="checkbox"
+                  id="export-setlist-include-chords"
+                  checked
+                />
                 Include chords (if available)
               </label>
             </div>
           </div>
           <div class="modal-actions">
-            <button id="export-setlist-confirm" class="btn primary">Export</button>
+            <button id="export-setlist-confirm" class="btn primary">
+              Export
+            </button>
             <button id="export-setlist-cancel" class="btn">Cancel</button>
           </div>
         </div>

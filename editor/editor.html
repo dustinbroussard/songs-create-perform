@@ -19,25 +19,52 @@
       media="(prefers-color-scheme: dark)"
       content="#000000"
     />
-    <link rel="manifest" href="/manifest.webmanifest" type="application/manifest+json" />
-    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
-    <link id="fa-cdn" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link
+      rel="manifest"
+      href="../manifest.webmanifest"
+      type="application/manifest+json"
+    />
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+    <link
+      id="fa-cdn"
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link id="neon-cdn" href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap" rel="stylesheet" />
+    <link
+      id="neon-cdn"
+      href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap"
+      rel="stylesheet"
+    />
     <script>
-      (function(){
-        function swapLocal(href, cdnId){
-          try{ fetch(href, { method: 'HEAD' }).then(r=>{ if(r.ok){
-            var link=document.createElement('link'); link.rel='stylesheet'; link.href=href; document.head.appendChild(link);
-            var cdn=document.getElementById(cdnId); if(cdn) { setTimeout(()=>cdn.parentNode && cdn.parentNode.removeChild(cdn), 0); }
-          }}).catch(()=>{}); }catch(e){}
+      (function () {
+        function swapLocal(href, cdnId) {
+          try {
+            fetch(href, { method: "HEAD" })
+              .then((r) => {
+                if (r.ok) {
+                  var link = document.createElement("link");
+                  link.rel = "stylesheet";
+                  link.href = href;
+                  document.head.appendChild(link);
+                  var cdn = document.getElementById(cdnId);
+                  if (cdn) {
+                    setTimeout(
+                      () => cdn.parentNode && cdn.parentNode.removeChild(cdn),
+                      0,
+                    );
+                  }
+                }
+              })
+              .catch(() => {});
+          } catch (e) {}
         }
-        swapLocal('/assets/vendor/fontawesome/css/all.min.css','fa-cdn');
-        swapLocal('/assets/vendor/fonts/neonderthaw.css','neon-cdn');
+        swapLocal("../assets/vendor/fontawesome/css/all.min.css", "fa-cdn");
+        swapLocal("../assets/vendor/fonts/neonderthaw.css", "neon-cdn");
       })();
     </script>
-    <script defer src="/lib/Sortable.min.js"></script>
+    <script defer src="../lib/Sortable.min.js"></script>
     <style>
       /* Additional styles for metadata panel */
       .metadata-panel {
@@ -96,7 +123,9 @@
     </style>
   </head>
   <body>
-    <div id="offline-banner" class="offline-banner" hidden>Offline mode: some features may be limited.</div>
+    <div id="offline-banner" class="offline-banner" hidden>
+      Offline mode: some features may be limited.
+    </div>
     <div id="editor-mode" class="editor-mode-overlay">
       <header id="app-header">
         <div class="header-left">
@@ -212,7 +241,9 @@
           <i class="fas fa-lock"></i> Performance Mode
         </button>
         <div class="modal-item">
-          <label for="edit-mode-select"><i class="fas fa-edit"></i> Edit Mode</label>
+          <label for="edit-mode-select"
+            ><i class="fas fa-edit"></i> Edit Mode</label
+          >
           <select id="edit-mode-select" class="modal-select">
             <option value="both">Both</option>
             <option value="lyrics">Lyrics</option>
@@ -220,7 +251,16 @@
           </select>
         </div>
         <div class="modal-item">
-          <label for="rhyme-mode-toggle" style="margin:0; flex:1; display:flex; align-items:center; gap:0.5rem;">
+          <label
+            for="rhyme-mode-toggle"
+            style="
+              margin: 0;
+              flex: 1;
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+            "
+          >
             <i class="fas fa-bullseye"></i> Rhyme Colors
           </label>
           <input type="checkbox" id="rhyme-mode-toggle" />
@@ -335,7 +375,7 @@
           id="metadata-close-btn"
           class="metadata-close-btn"
           title="Close"
-        > 
+        >
           <i class="fas fa-times"></i>
         </button>
       </h3>
@@ -343,7 +383,12 @@
       <div class="metadata-editor">
         <div class="metadata-row">
           <label for="song-title-meta">Title:</label>
-          <input type="text" id="song-title-meta" class="modal-select" placeholder="Song title" />
+          <input
+            type="text"
+            id="song-title-meta"
+            class="modal-select"
+            placeholder="Song title"
+          />
         </div>
 
         <div class="metadata-row">
@@ -367,7 +412,13 @@
 
         <div class="metadata-row">
           <label for="song-tempo-meta">Tempo (BPM):</label>
-          <input type="number" id="song-tempo-meta" class="modal-select" min="60" max="240" />
+          <input
+            type="number"
+            id="song-tempo-meta"
+            class="modal-select"
+            min="60"
+            max="240"
+          />
         </div>
 
         <div class="metadata-row">
@@ -383,7 +434,12 @@
 
         <div class="metadata-row">
           <label for="song-tags">Tags:</label>
-          <input type="text" id="song-tags" class="modal-select" placeholder="rock, ballad, easy" />
+          <input
+            type="text"
+            id="song-tags"
+            class="modal-select"
+            placeholder="rock, ballad, easy"
+          />
           <small>Separate tags with commas</small>
         </div>
 
@@ -449,9 +505,9 @@
       </button>
     </div>
 
-    <script defer src="/config.js"></script>
-    <script defer src="/utils.js"></script>
-    <script defer src="/script.js"></script>
+    <script defer src="../config.js"></script>
+    <script defer src="../utils.js"></script>
+    <script defer src="../script.js"></script>
     <script defer src="songs.js"></script>
     <script defer src="editor.js"></script>
 
