@@ -193,8 +193,8 @@ document.addEventListener("DOMContentLoaded", () => {
           return word.match(/[aeiouy]{1,2}/g)?.length || 0;
         },
 
-        init() {
-          this.loadData();
+        async init() {
+          await this.loadData();
           this.loadAISettings();
           this.setupEventListeners();
           this.debouncedSaveCurrentSong = debounce(
@@ -259,14 +259,23 @@ document.addEventListener("DOMContentLoaded", () => {
         safeLocalStorageSet(key, value) {
           try {
             localStorage.setItem(key, value);
+            try {
+              window.StorageSafe?.snapshotLater?.("editor:set");
+            } catch {}
             return true;
           } catch (e) {
             console.warn("localStorage write failed", e);
             ClipboardManager?.showToast?.("Storage full or blocked", "error");
+            try {
+              window.StorageSafe?.snapshotWithData?.(value, "editor:lsFail");
+            } catch {}
             return false;
           }
         },
-        loadData() {
+        async loadData() {
+          try {
+            await window.StorageSafe?.init?.();
+          } catch {}
           this.songs = safeParse(
             localStorage.getItem(App.Config.STORAGE.SONGS),
             [],
