@@ -948,6 +948,10 @@ img, video, iframe {
         user-select: none;
         transition: opacity 0.15s;
     }
+    
+    #performance-song-info h2 {
+    font-size: 1.1rem !important;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1073,7 +1077,7 @@ img, video, iframe {
 }
 
 #performance-song-info h2 {
-    font-size: 1.13em;
+    font-size: 1.9em;
     margin-bottom: 0.15em;
 }
 

@@ -163,7 +163,7 @@
 .nav-arrow.right { right: 0.5em; }
 
 .song-progress {
-    font-size: 1.02em;
+    font-size: 1.5em;
     color: var(--accent-secondary, #aaa);
     margin-top: 0.1em;
     margin-bottom: 0.4em;
@@ -280,14 +280,14 @@
       position: fixed;
       right: 1.3rem;
       z-index: 2020;
-      width: 37px;
-      height: 37px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       background: var(--accent-primary, #00bcd4);
       color: var(--bg-primary, #111);
       border: none;
       box-shadow: 0 2px 12px rgba(0,0,0,0.23);
-      font-size: 1.1rem;
+      font-size: .9rem;
       display: none;
       align-items: center;
       justify-content: center;
@@ -295,19 +295,29 @@
       transition: background 0.22s, opacity 0.14s, color 0.14s;
     }
     .scroll-to-top-btn {
-      bottom: 156px;
+      bottom: 147px;
     }
 
     .auto-scroll-btn {
       bottom: 108px;
       display: flex;
     }
+    .song-progress {
+      font-size: 1.1em;
+    }
 
     .performance-controls .icon-btn,
     .performance-footer .icon-btn {
-      width: 2em;
-      height: 2em;
-      font-size: 1rem;
+      width: 1.7rem;
+      height: 1.7rem;
+      font-size: 0.7rem;
+   }
+   
+    #exit-performance-btn, #toggle-theme-btn {
+      padding: 0.1em 0.45em;
+      font-size: 0.7em;
+      min-width: 1.7rem;
+      min-height: 1.7rem;
    }
 }
 
