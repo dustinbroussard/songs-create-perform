@@ -2,66 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>LyricSmith - Editor Mode</title>
     <link rel="stylesheet" href="../style.css" />
     <link rel="stylesheet" href="editor.css" />
-    <meta name="theme-color" content="#000000" />
-    <link
-      rel="manifest"
-      href="../manifest.webmanifest"
-      type="application/manifest+json"
-    />
-    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
-    <link
-      id="fa-cdn"
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    />
+    <link rel="icon" href="../assets/icons/icon-192x192.png" />
+    <meta name="theme-color" content="#000000" id="theme-color" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <link rel="stylesheet" href="../lib/fontawesome/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      id="neon-cdn"
       href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap"
       rel="stylesheet"
     />
     <script>
-      (function () {
-        function swapLocal(href, cdnId) {
-          try {
-            fetch(href, { method: "HEAD" })
-              .then((r) => {
-                if (r.ok) {
-                  var link = document.createElement("link");
-                  link.rel = "stylesheet";
-                  link.href = href;
-                  document.head.appendChild(link);
-                  var cdn = document.getElementById(cdnId);
-                  if (cdn) {
-                    setTimeout(
-                      () => cdn.parentNode && cdn.parentNode.removeChild(cdn),
-                      0,
-                    );
-                  }
-                }
-              })
-              .catch(() => {});
-          } catch (e) {}
-        }
-        swapLocal("../assets/vendor/fontawesome/css/all.min.css", "fa-cdn");
-        swapLocal("../assets/vendor/fonts/neonderthaw.css", "neon-cdn");
-      })();
       try {
         const t = localStorage.getItem("theme") || "dark";
         document.documentElement.dataset.theme = t;
         const m = document.querySelector('meta[name="theme-color"]');
-        m && m.setAttribute("content", t === "dark" ? "#000000" : "#ffffff");
+        if (m) m.setAttribute("content", t === "dark" ? "#000000" : "#ffffff");
       } catch {}
     </script>
-    <script defer src="../lib/Sortable.min.js"></script>
+    <script src="../lib/storage.js"></script>
+    <script src="../lib/sortable.min.js"></script>
     <style>
       /* Additional styles for metadata panel */
       .metadata-panel {
@@ -120,9 +84,6 @@
     </style>
   </head>
   <body>
-    <div id="offline-banner" class="offline-banner" hidden>
-      Offline mode: some features may be limited.
-    </div>
     <div id="editor-mode" class="editor-mode-overlay">
       <header id="app-header">
         <div class="header-left">
@@ -205,7 +166,7 @@
     </div>
 
     <div id="copy-modal" class="modal-overlay">
-      <div class="modal-content">
+      <div class="modal">
         <h2>Copy Options</h2>
         <button class="modal-copy-btn" data-copy-type="raw">
           <i class="fas fa-align-left"></i> Raw Lyrics
@@ -229,7 +190,7 @@
     </div>
 
     <div id="editor-modal" class="modal-overlay">
-      <div class="modal-content">
+      <div class="modal">
         <h2>Editor Options</h2>
         <button id="toggle-chords-btn" class="modal-action-btn">
           <i class="fas fa-guitar"></i> Toggle Chords
@@ -237,8 +198,8 @@
         <button id="toggle-read-only-btn" class="modal-action-btn">
           <i class="fas fa-lock"></i> Performance Mode
         </button>
-        <div class="modal-item">
-          <label for="edit-mode-select"
+        <div class="modal-action-btn">
+          <label for="edit-mode-select" class
             ><i class="fas fa-edit"></i> Edit Mode</label
           >
           <select id="edit-mode-select" class="modal-select">
@@ -247,20 +208,13 @@
             <option value="chords">Chords</option>
           </select>
         </div>
-        <div class="modal-item">
-          <label
-            for="rhyme-mode-toggle"
-            style="
-              margin: 0;
-              flex: 1;
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-            "
-          >
-            <i class="fas fa-bullseye"></i> Rhyme Colors
-          </label>
+        <div class="modal-action-btn">
+          <i class="fas fa-bullseye"></i> Rhyme Colors
           <input type="checkbox" id="rhyme-mode-toggle" />
+        </div>
+        <div class="modal-action-btn">
+          <i class="fas fa-ruler-horizontal"></i> Measure Mode
+          <input type="checkbox" id="measure-mode-toggle" />
         </div>
         <button id="save-song-btn" class="modal-action-btn">
           <i class="fas fa-save"></i> Save Song
@@ -284,7 +238,7 @@
     </div>
 
     <div id="ai-tools-modal" class="modal-overlay">
-      <div class="modal-content">
+      <div class="modal">
         <h2>AI Tools</h2>
         <textarea
           id="ai-additional-notes"
@@ -337,8 +291,48 @@
       </div>
     </div>
 
+    <!-- AI Loading Spinner Overlay -->
+    <div
+      id="ai-loading-overlay"
+      class="ai-loading-overlay"
+      aria-hidden="true"
+      style="display: none"
+    >
+      <div class="ai-loading-box">
+        <div class="ai-spinner" aria-label="Processing"></div>
+        <div class="ai-loading-text">Processing…</div>
+      </div>
+    </div>
+
+    <!-- AI Review Modal (Accept/Reject) -->
+    <div id="ai-review-modal" class="modal-overlay" style="display: none">
+      <div class="modal" style="width: 520px; max-width: 94vw">
+        <h2>AI Suggestion</h2>
+        <pre id="ai-review-text" class="ai-review-text"></pre>
+        <div
+          class="modal-actions"
+          style="
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+          "
+        >
+          <button id="ai-accept-btn" class="modal-action-btn">
+            <i class="fas fa-check"></i> Accept
+          </button>
+          <button id="ai-reject-btn" class="modal-action-btn">
+            <i class="fas fa-times"></i> Reject
+          </button>
+          <button class="close-modal-btn">
+            <i class="fas fa-times-circle"></i> Close
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="add-section-modal" class="modal-overlay">
-      <div class="modal-content">
+      <div class="modal">
         <h2>Add Section</h2>
         <button class="modal-action-btn" data-section="[Intro]">
           <i class="fas fa-play"></i> Intro
@@ -380,17 +374,12 @@
       <div class="metadata-editor">
         <div class="metadata-row">
           <label for="song-title-meta">Title:</label>
-          <input
-            type="text"
-            id="song-title-meta"
-            class="modal-select"
-            placeholder="Song title"
-          />
+          <input type="text" id="song-title-meta" placeholder="Song title" />
         </div>
 
         <div class="metadata-row">
           <label for="song-key">Key:</label>
-          <select id="song-key" class="modal-select">
+          <select id="song-key">
             <option value="">Select Key</option>
             <option value="C">C</option>
             <option value="C#">C#</option>
@@ -409,18 +398,12 @@
 
         <div class="metadata-row">
           <label for="song-tempo-meta">Tempo (BPM):</label>
-          <input
-            type="number"
-            id="song-tempo-meta"
-            class="modal-select"
-            min="60"
-            max="240"
-          />
+          <input type="number" id="song-tempo-meta" min="60" max="240" />
         </div>
 
         <div class="metadata-row">
           <label for="song-time-signature">Time Signature:</label>
-          <select id="song-time-signature" class="modal-select">
+          <select id="song-time-signature">
             <option value="4/4">4/4</option>
             <option value="3/4">3/4</option>
             <option value="2/4">2/4</option>
@@ -431,12 +414,7 @@
 
         <div class="metadata-row">
           <label for="song-tags">Tags:</label>
-          <input
-            type="text"
-            id="song-tags"
-            class="modal-select"
-            placeholder="rock, ballad, easy"
-          />
+          <input type="text" id="song-tags" placeholder="rock, ballad, easy" />
           <small>Separate tags with commas</small>
         </div>
 
@@ -444,23 +422,22 @@
           <label for="song-notes">Performance Notes:</label>
           <textarea
             id="song-notes"
-            class="modal-select"
             placeholder="Structure, performance notes, etc."
             rows="4"
           ></textarea>
         </div>
 
-        <div class="metadata-text">
+        <div class="metadata-row">
           <label>Created:</label>
           <span id="song-created" class="metadata-info"></span>
         </div>
 
-        <div class="metadata-text">
+        <div class="metadata-row">
           <label>Last Edited:</label>
           <span id="song-edited-meta" class="metadata-info"></span>
         </div>
 
-        <div class="icon-btn">
+        <div class="metadata-row">
           <button
             id="export-single-song"
             class="btn"
@@ -502,11 +479,9 @@
       </button>
     </div>
 
-    <script defer src="../config.js"></script>
-    <script defer src="../utils.js"></script>
-    <script defer src="../script.js"></script>
-    <script defer src="songs.js"></script>
-    <script defer src="editor.js"></script>
+    <script src="../config.js"></script>
+    <script src="songs.js"></script>
+    <script src="editor.js"></script>
 
     <script>
       // Additional functionality for metadata panel
@@ -548,6 +523,12 @@
           }
         });
       });
+    </script>
+    <script>
+      if ("serviceWorker" in navigator) {
+        // Ensure registration path is correct from the editor/ subdirectory
+        navigator.serviceWorker.register("../sw.js");
+      }
     </script>
   </body>
 </html>
