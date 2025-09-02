@@ -124,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "lyrics-editor-container",
         ),
         lyricsDisplay: document.getElementById("lyrics-display"),
+        fontControlsEl: document.getElementById("font-controls"),
         decreaseFontBtn: document.getElementById("font-decrease"),
         increaseFontBtn: document.getElementById("font-increase"),
         fontSizeDisplay: document.getElementById("font-size-display"),
@@ -182,6 +183,12 @@ document.addEventListener("DOMContentLoaded", () => {
         sectionMenuTarget: null,
         sectionSortable: null,
         lastSnapshotTime: 0,
+        pendingAI: null,
+        pendingAIRange: null,
+        pendingAIType: null,
+        fontFab: null,
+        _fontControlsTimer: null,
+        _fontOutsideHandler: null,
 
         syllableCount(word) {
           word = word.toLowerCase();
@@ -228,6 +235,168 @@ document.addEventListener("DOMContentLoaded", () => {
             this.isChordsVisible = !!App.Config.chordsModeEnabled;
           }
           this.updateChordsVisibility();
+          this.initFontControlsMobile();
+          window.addEventListener(
+            "resize",
+            debounce(() => this.initFontControlsMobile(), 200),
+          );
+        },
+
+        initFontControlsMobile() {
+          const isMobile = window.innerWidth <= 800;
+          if (!this.fontControlsEl) return;
+          if (!isMobile) {
+            this.fontControlsEl.classList.add("visible");
+            if (this.fontFab && this.fontFab.parentNode)
+              this.fontFab.parentNode.removeChild(this.fontFab);
+            this.fontFab = null;
+            this.clearFontControlsHideTimer?.();
+            return;
+          }
+          this.fontControlsEl.classList.remove("visible");
+          if (!this.fontFab) {
+            const btn = document.createElement("button");
+            btn.className = "font-fab";
+            btn.title = "Font controls";
+            btn.innerHTML = '<i class="fas fa-text-height"></i>';
+            document.body.appendChild(btn);
+            btn.addEventListener("click", () => this.showFontControls());
+            this.fontFab = btn;
+          }
+          if (!this._fontOutsideHandler) {
+            this._fontOutsideHandler = (e) => {
+              if (!this.fontControlsEl.classList.contains("visible")) return;
+              if (this.fontControlsEl.contains(e.target)) return;
+              if (this.fontFab && this.fontFab.contains(e.target)) return;
+              this.hideFontControls();
+            };
+            document.addEventListener("click", this._fontOutsideHandler);
+          }
+          const reset = () => this.resetFontControlsHideTimer();
+          this.fontControlsEl.addEventListener("mousemove", reset);
+          this.fontControlsEl.addEventListener("touchstart", reset, {
+            passive: true,
+          });
+        },
+
+        showFontControls() {
+          if (!this.fontControlsEl) return;
+          this.fontControlsEl.classList.add("visible");
+          if (this.fontFab) this.fontFab.classList.add("hidden");
+          this.resetFontControlsHideTimer();
+        },
+
+        hideFontControls() {
+          if (!this.fontControlsEl) return;
+          this.fontControlsEl.classList.remove("visible");
+          if (this.fontFab) this.fontFab.classList.remove("hidden");
+          this.clearFontControlsHideTimer();
+        },
+
+        resetFontControlsHideTimer() {
+          this.clearFontControlsHideTimer();
+          this._fontControlsTimer = setTimeout(
+            () => this.hideFontControls(),
+            4000,
+          );
+        },
+
+        clearFontControlsHideTimer() {
+          if (this._fontControlsTimer) {
+            clearTimeout(this._fontControlsTimer);
+            this._fontControlsTimer = null;
+          }
+        },
+
+        showAILoading(visible) {
+          const overlay = document.getElementById("ai-loading-overlay");
+          if (!overlay) return;
+          overlay.style.display = visible ? "flex" : "none";
+        },
+
+        showAIReview(text) {
+          const modal = document.getElementById("ai-review-modal");
+          const pre = document.getElementById("ai-review-text");
+          if (!modal || !pre) return;
+          pre.textContent = text;
+          modal.style.display = "flex";
+          setTimeout(() => modal.classList.add("visible"), 10);
+        },
+
+        hideAIReview() {
+          const modal = document.getElementById("ai-review-modal");
+          if (!modal) return;
+          modal.classList.remove("visible");
+          setTimeout(() => {
+            modal.style.display = "none";
+          }, 150);
+        },
+
+        acceptAI() {
+          if (!this.pendingAI) {
+            this.hideAIReview();
+            return;
+          }
+          const { response, append, prompt } = this.pendingAI;
+          const cleaned = cleanAIOutput(response);
+
+          if (
+            this.pendingAIType === "reword" ||
+            this.pendingAIType === "rewrite" ||
+            prompt.startsWith("Suggest alternative wording") ||
+            prompt.startsWith("Rewrite this line")
+          ) {
+            const range = this.pendingAIRange;
+            if (range) {
+              const selectionText = range.toString();
+              const selLineCount =
+                (selectionText.match(/\n/g) || []).length + 1;
+              const normalized = cleaned
+                .replace(/\n{2,}/g, "\n")
+                .split(/\n/)
+                .slice(0, Math.max(1, selLineCount))
+                .join("\n")
+                .replace(/^\s*\[[^\]]+\]\s*$/gm, "")
+                .replace(/^\s+|\s+$/g, "");
+              range.deleteContents();
+              range.insertNode(document.createTextNode(normalized));
+              this.updateSyllableCount();
+              this.updateRhymes();
+              this.saveCurrentSong(true);
+            }
+            this.pendingAIRange = null;
+            this.pendingAI = null;
+            this.pendingAIType = null;
+            this.hideAIReview();
+            return;
+          }
+
+          if (this.pendingAIType === "continue") {
+            const range = this.pendingAIRange;
+            if (range) {
+              range.collapse(false);
+              range.insertNode(document.createTextNode("\n" + cleaned));
+              this.saveCurrentSong(true);
+            }
+            this.pendingAIRange = null;
+            this.pendingAI = null;
+            this.pendingAIType = null;
+            this.hideAIReview();
+            return;
+          }
+
+          this.applyAIResult(response, append);
+          this.pendingAI = null;
+          this.pendingAIRange = null;
+          this.pendingAIType = null;
+          this.hideAIReview();
+        },
+
+        rejectAI() {
+          this.pendingAI = null;
+          this.pendingAIRange = null;
+          this.pendingAIType = null;
+          this.hideAIReview();
         },
 
         showSaveStatus(state = "saved") {
@@ -433,6 +602,15 @@ document.addEventListener("DOMContentLoaded", () => {
           this.scrollToTopBtn?.addEventListener("click", () =>
             this.scrollToTop(),
           );
+          document
+            .getElementById("ai-accept-btn")
+            ?.addEventListener("click", () => this.acceptAI());
+          document
+            .getElementById("ai-reject-btn")
+            ?.addEventListener("click", () => this.rejectAI());
+          document
+            .querySelector("#ai-review-modal .close-modal-btn")
+            ?.addEventListener("click", () => this.hideAIReview());
           // Handle modal items
           document
             .getElementById("toggle-chords-btn")
@@ -859,6 +1037,13 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Please set your OpenRouter API key in AI Settings.");
             return;
           }
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+            this.pendingAIRange = sel.getRangeAt(0).cloneRange();
+          } else {
+            this.pendingAIRange = null;
+          }
+          this.pendingAIType = action;
           this.callOpenRouter(prompt);
         },
 
@@ -867,43 +1052,23 @@ document.addEventListener("DOMContentLoaded", () => {
           const fullPrompt = notes
             ? `${prompt}\nAdditional notes: ${notes}`
             : prompt;
-          const response = await callOpenRouterAPI(fullPrompt);
-          if (!response) return;
+          try {
+            this.showAILoading(true);
+            const response = await callOpenRouterAPI(fullPrompt);
+            this.showAILoading(false);
+            if (!response) return;
 
-          // Handle context menu actions based on prompt
-          if (fullPrompt.startsWith("Find rhymes for:")) {
-            ClipboardManager.showToast(response, "info");
-            return;
-          }
-
-          const selection = window.getSelection();
-          if (
-            fullPrompt.startsWith("Suggest alternative wording") ||
-            fullPrompt.startsWith("Rewrite this line")
-          ) {
-            if (selection && !selection.isCollapsed) {
-              const range = selection.getRangeAt(0);
-              range.deleteContents();
-              range.insertNode(document.createTextNode(response));
-              selection.removeAllRanges();
-              this.saveCurrentSong(true);
+            if (fullPrompt.startsWith("Find rhymes for:")) {
+              ClipboardManager.showToast(cleanAIOutput(response), "info");
+              return;
             }
-            return;
-          }
 
-          if (fullPrompt.startsWith("Continue the lyrics after:")) {
-            if (selection && !selection.isCollapsed) {
-              const range = selection.getRangeAt(0);
-              range.collapse(false);
-              range.insertNode(document.createTextNode("\n" + response));
-              selection.removeAllRanges();
-              this.saveCurrentSong(true);
-            }
-            return;
+            this.pendingAI = { response, append, prompt: fullPrompt };
+            this.showAIReview(cleanAIOutput(response));
+          } catch (e) {
+            this.showAILoading(false);
+            throw e;
           }
-
-          // For AI tools or when no selection, apply to entire song
-          this.applyAIResult(response, append);
         },
 
         async invokeAIFormat() {
@@ -917,10 +1082,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let prompt = `Clean up the formatting for this song and return chords and lyrics on alternating lines with section labels in square brackets.\nTitle: ${song.title}\nKey: ${song.key}\nTempo: ${song.tempo}\nTime Signature: ${song.timeSignature}\n\n${formatted}`;
             const notes = this.additionalNotesInput?.value.trim();
             if (notes) prompt += `\nAdditional notes: ${notes}`;
-            const response = await callOpenRouterAPI(prompt);
-            if (response) {
-              this.applyAIResult(response, false, "AI formatting applied!");
-            }
+            this.callOpenRouter(prompt, false);
           } catch (err) {
             console.error("AI format error", err);
           }
@@ -938,10 +1100,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let prompt = `Rewrite the following song in the ${newGenre} genre while preserving meaning and structure. Return chords and lyrics on alternating lines with section labels in square brackets.\nTitle: ${song.title}\nKey: ${song.key}\nTempo: ${song.tempo}\nTags: ${tags}\n\n${formatted}`;
             const notes = this.additionalNotesInput?.value.trim();
             if (notes) prompt += `\nAdditional notes: ${notes}`;
-            const response = await callOpenRouterAPI(prompt);
-            if (response) {
-              this.applyAIResult(response, false, `Re-genred as ${newGenre}`);
-            }
+            this.callOpenRouter(prompt, false);
           } catch (err) {
             console.error("Re-genre error", err);
           }
@@ -1961,6 +2120,8 @@ document.addEventListener("DOMContentLoaded", () => {
               default:
                 promptText = action;
             }
+            app.pendingAIRange = null;
+            app.pendingAIType = append ? "continue" : null;
             app.callOpenRouter(promptText, append);
             document
               .getElementById("ai-tools-modal")
