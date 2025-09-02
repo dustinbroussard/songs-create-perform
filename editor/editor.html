@@ -9,59 +9,26 @@
     <title>LyricSmith - Editor Mode</title>
     <link rel="stylesheet" href="../style.css" />
     <link rel="stylesheet" href="editor.css" />
-    <meta name="theme-color" content="#000000" />
-    <link
-      rel="manifest"
-      href="../manifest.webmanifest"
-      type="application/manifest+json"
-    />
-    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
-    <link
-      id="fa-cdn"
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    />
+    <link rel="icon" href="../assets/icons/icon-192x192.png" />
+    <meta name="theme-color" content="#000000" id="theme-color" />
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <link rel="stylesheet" href="../lib/fontawesome/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      id="neon-cdn"
       href="https://fonts.googleapis.com/css2?family=Neonderthaw&display=swap"
       rel="stylesheet"
     />
     <script>
-      (function () {
-        function swapLocal(href, cdnId) {
-          try {
-            fetch(href, { method: "HEAD" })
-              .then((r) => {
-                if (r.ok) {
-                  var link = document.createElement("link");
-                  link.rel = "stylesheet";
-                  link.href = href;
-                  document.head.appendChild(link);
-                  var cdn = document.getElementById(cdnId);
-                  if (cdn) {
-                    setTimeout(
-                      () => cdn.parentNode && cdn.parentNode.removeChild(cdn),
-                      0,
-                    );
-                  }
-                }
-              })
-              .catch(() => {});
-          } catch (e) {}
-        }
-        swapLocal("../assets/vendor/fontawesome/css/all.min.css", "fa-cdn");
-        swapLocal("../assets/vendor/fonts/neonderthaw.css", "neon-cdn");
-      })();
       try {
         const t = localStorage.getItem("theme") || "dark";
         document.documentElement.dataset.theme = t;
-        const m = document.querySelector('meta[name="theme-color"]');
-        m && m.setAttribute("content", t === "dark" ? "#000000" : "#ffffff");
+        const m = document.getElementById("theme-color");
+        if (m) m.setAttribute("content", t === "dark" ? "#000000" : "#ffffff");
       } catch {}
     </script>
-    <script defer src="../lib/Sortable.min.js"></script>
+    <script src="../lib/storage.js"></script>
+    <script src="../lib/Sortable.min.js"></script>
     <style>
       /* Additional styles for metadata panel */
       .metadata-panel {
@@ -334,6 +301,46 @@
         <button class="close-modal-btn">
           <i class="fas fa-times"></i> Close
         </button>
+      </div>
+    </div>
+
+    <!-- AI Loading Spinner Overlay -->
+    <div
+      id="ai-loading-overlay"
+      class="ai-loading-overlay"
+      aria-hidden="true"
+      style="display: none"
+    >
+      <div class="ai-loading-box">
+        <div class="ai-spinner" aria-label="Processing"></div>
+        <div class="ai-loading-text">Processing…</div>
+      </div>
+    </div>
+
+    <!-- AI Review Modal (Accept/Reject) -->
+    <div id="ai-review-modal" class="modal-overlay" style="display: none">
+      <div class="modal" style="width: 520px; max-width: 94vw">
+        <h2>AI Suggestion</h2>
+        <pre id="ai-review-text" class="ai-review-text"></pre>
+        <div
+          class="modal-actions"
+          style="
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+          "
+        >
+          <button id="ai-accept-btn" class="modal-action-btn">
+            <i class="fas fa-check"></i> Accept
+          </button>
+          <button id="ai-reject-btn" class="modal-action-btn">
+            <i class="fas fa-times"></i> Reject
+          </button>
+          <button class="close-modal-btn">
+            <i class="fas fa-times-circle"></i> Close
+          </button>
+        </div>
       </div>
     </div>
 

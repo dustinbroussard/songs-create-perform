@@ -30,7 +30,6 @@ self.addEventListener("install", (event) => {
 
           // App assets for offline logo/icon support
           "assets/images/mylogo.png",
-          "assets/favicon.svg",
           "assets/icons/icon-48x48.png",
           "assets/icons/icon-96x96.png",
           "assets/icons/icon-192x192.png",
