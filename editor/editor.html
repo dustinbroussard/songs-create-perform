@@ -9,16 +9,7 @@
     <title>LyricSmith - Editor Mode</title>
     <link rel="stylesheet" href="../style.css" />
     <link rel="stylesheet" href="editor.css" />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: light)"
-      content="#ffffff"
-    />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: dark)"
-      content="#000000"
-    />
+    <meta name="theme-color" content="#000000" />
     <link
       rel="manifest"
       href="../manifest.webmanifest"
@@ -63,6 +54,12 @@
         swapLocal("../assets/vendor/fontawesome/css/all.min.css", "fa-cdn");
         swapLocal("../assets/vendor/fonts/neonderthaw.css", "neon-cdn");
       })();
+      try {
+        const t = localStorage.getItem("theme") || "dark";
+        document.documentElement.dataset.theme = t;
+        const m = document.querySelector('meta[name="theme-color"]');
+        m && m.setAttribute("content", t === "dark" ? "#000000" : "#ffffff");
+      } catch {}
     </script>
     <script defer src="../lib/Sortable.min.js"></script>
     <style>
