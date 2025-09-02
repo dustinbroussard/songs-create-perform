@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const { once, safeParse } = App.Utils || {};
+  const { once } = App.Utils || {};
   once &&
     once("editor-init", () => {
       // Ensure touch devices trigger button actions
@@ -15,17 +15,16 @@ document.addEventListener("DOMContentLoaded", () => {
         { passive: false },
       );
 
-      App.Utils.once("offline-banner", () => {
-        const banner = document.getElementById("offline-banner");
-        if (!banner) return;
-        const update = () =>
+      const offlineBanner = document.getElementById("offline-banner");
+      if (offlineBanner) {
+        const updateBanner = () =>
           navigator.onLine
-            ? banner.setAttribute("hidden", "")
-            : banner.removeAttribute("hidden");
-        window.addEventListener("online", update);
-        window.addEventListener("offline", update);
-        update();
-      });
+            ? offlineBanner.setAttribute("hidden", "")
+            : offlineBanner.removeAttribute("hidden");
+        window.addEventListener("online", updateBanner);
+        window.addEventListener("offline", updateBanner);
+        updateBanner();
+      }
 
       // Utilities
       function debounce(fn, delay = 500) {
@@ -40,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           const meta =
             document.querySelector('meta[name="theme-color"]') ||
-            (() => {
+            (function () {
               const m = document.createElement("meta");
               m.name = "theme-color";
               document.head.appendChild(m);
@@ -53,9 +52,223 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch {}
       }
 
+      // Clipboard Manager Class
+      class ClipboardManager {
+        static async copyToClipboard(text, showToast = true) {
+          try {
+            if (navigator.clipboard && window.isSecureContext) {
+              await navigator.clipboard.writeText(text);
+            } else {
+              // Fallback for mobile/older browsers
+              const textArea = document.createElement("textarea");
+              textArea.value = text;
+              textArea.style.position = "fixed";
+              textArea.style.left = "-999999px";
+              textArea.style.top = "-999999px";
+              document.body.appendChild(textArea);
+              textArea.focus();
+              textArea.select();
+              document.execCommand("copy");
+              textArea.remove();
+            }
+
+            if (showToast) {
+              this.showToast("Copied to clipboard!", "success");
+            }
+            return true;
+          } catch (err) {
+            console.error("Failed to copy:", err);
+            if (showToast) {
+              this.showToast("Failed to copy to clipboard", "error");
+            }
+            return false;
+          }
+        }
+
+        static showToast(message, type = "info", duration = 3000) {
+          let container = document.querySelector(".toast-container");
+          if (!container) {
+            container = document.createElement("div");
+            container.className = "toast-container";
+            document.body.appendChild(container);
+          }
+
+          const toast = document.createElement("div");
+          toast.className = `toast toast-${type}`;
+          toast.setAttribute("role", "status");
+          toast.setAttribute("tabindex", "0");
+
+          const content = document.createElement("div");
+          content.className = "toast-content";
+          content.textContent = message;
+          toast.appendChild(content);
+
+          const closeBtn = document.createElement("button");
+          closeBtn.className = "toast-close";
+          closeBtn.setAttribute("aria-label", "Close notification");
+          closeBtn.innerHTML = "&times;";
+          closeBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toast.classList.remove("show");
+            setTimeout(() => toast.remove(), 300);
+          });
+          toast.appendChild(closeBtn);
+
+          // Allow click to dismiss
+          toast.addEventListener("click", () => {
+            toast.classList.remove("show");
+            setTimeout(() => toast.remove(), 300);
+          });
+          toast.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              toast.classList.remove("show");
+              setTimeout(() => toast.remove(), 300);
+            }
+          });
+          container.appendChild(toast);
+
+          // Trigger animation
+          setTimeout(() => toast.classList.add("show"), 10);
+
+          // Auto-remove only if duration > 0
+          if (typeof duration === "number" && duration > 0) {
+            const hideAfter = duration;
+            setTimeout(() => {
+              toast.classList.remove("show");
+              setTimeout(() => toast.remove(), 300);
+            }, hideAfter);
+          } else {
+            toast.classList.add("toast-sticky");
+          }
+        }
+
+        static formatLyricsWithChords(lyrics, chords) {
+          const lyricLines = lyrics.split("\n");
+          const chordLines = chords.split("\n");
+
+          return lyricLines
+            .map((lyricLine, i) => {
+              const chordLine = chordLines[i] || "";
+              if (chordLine.trim()) {
+                return `${chordLine}\n${lyricLine}`;
+              }
+              return lyricLine;
+            })
+            .join("\n");
+        }
+
+        static formatSongForExport(song, includeMetadata = true) {
+          let output = "";
+
+          if (includeMetadata) {
+            output += `# ${song.title}\n\n`;
+            if (song.key) output += `**Key:** ${song.key}\n`;
+            if (song.tempo) output += `**Tempo:** ${song.tempo} BPM\n`;
+            if (song.timeSignature)
+              output += `**Time Signature:** ${song.timeSignature}\n`;
+            if (song.tags && song.tags.length > 0)
+              output += `**Tags:** ${song.tags.join(", ")}\n`;
+            output += "\n---\n\n";
+          }
+
+          // Add lyrics with chords
+          if (song.chords && song.chords.trim()) {
+            output += this.formatLyricsWithChords(song.lyrics, song.chords);
+          } else {
+            output += song.lyrics;
+          }
+
+          if (song.notes && song.notes.trim()) {
+            output += "\n\n---\n**Notes:**\n" + song.notes;
+          }
+
+          return output;
+        }
+      }
+
+      const AI_OUTPUT_CONTRACT = [
+        "Rules (obey strictly):",
+        "1) Return ONLY the requested content.",
+        "2) No explanations, analysis, reasoning, or commentary.",
+        "3) No greetings or prefaces; no summaries.",
+        "4) Do NOT use Markdown or code fences.",
+        "5) No titles or metadata, only section labels in square brackets when applicable.",
+        "6) Trim trailing spaces; at most one blank line between sections.",
+      ].join(" ");
+
+      const AI_RHYME_CONTRACT = [
+        "Return ONLY a concise, comma-separated list of rhyme candidates.",
+        "No extra words, no numbering, no pre/post text.",
+      ].join(" ");
+
+      const MICRO_CONTRACTS = {
+        alternating: [
+          "Format: alternate lines — chords line, then lyrics line, repeating.",
+          "Section labels must be on their own line in square brackets (e.g., [Verse 1]).",
+          "Do not include a title or metadata. Ensure an even number of non-label lines.",
+        ].join(" "),
+        rewriteLine: [
+          "Return only the rewritten line(s). Keep original line breaks.",
+          "No chords, no section labels, no extra text.",
+        ].join(" "),
+        suggestChords: [
+          "For each lyric line, output one chords line above it.",
+          "Section labels remain on their own [Label] lines.",
+          "No other text. Ensure an even number of non-label lines.",
+        ].join(" "),
+        firstDraft: [
+          "Create a complete song with common sections. Use alternating lines (chords/lyrics).",
+          "Section labels on their own [Label] lines. No title/metadata outside labels.",
+        ].join(" "),
+        polish: [
+          "Preserve structure and meaning. Use alternating lines (chords/lyrics).",
+          "Section labels on [Label] lines. No extra commentary or metadata.",
+        ].join(" "),
+        continueSong: [
+          "Append continuation only. Use alternating lines (chords/lyrics).",
+          "Section labels on [Label] lines. Do not repeat provided text.",
+        ].join(" "),
+        formatOnly: [
+          "Reformat only; do not change words unless spacing/labels are incorrect.",
+          "Output alternating lines (chords/lyrics) with [Label] lines; no metadata.",
+        ].join(" "),
+        reGenre: [
+          "Rewrite in target genre while preserving meaning and structure.",
+          "Use alternating lines (chords/lyrics) with [Label] lines; no metadata.",
+        ].join(" "),
+      };
+
+      function chooseMicroContract(prompt) {
+        if (/^Find rhymes for:/i.test(prompt))
+          return { rhyme: true, contract: AI_RHYME_CONTRACT };
+        if (/^Suggest alternative wording/i.test(prompt))
+          return { contract: MICRO_CONTRACTS.rewriteLine };
+        if (/^Rewrite this line/i.test(prompt))
+          return { contract: MICRO_CONTRACTS.rewriteLine };
+        if (
+          /^Continue the (song|lyrics)/i.test(prompt) ||
+          /^Continue the song/i.test(prompt)
+        )
+          return { contract: MICRO_CONTRACTS.continueSong };
+        if (/^Suggest chord progressions/i.test(prompt))
+          return { contract: MICRO_CONTRACTS.suggestChords };
+        if (/^Write a complete first draft/i.test(prompt))
+          return { contract: MICRO_CONTRACTS.firstDraft };
+        if (/^Polish the following lyrics/i.test(prompt))
+          return { contract: MICRO_CONTRACTS.polish };
+        if (/^Rewrite these lyrics in the style/i.test(prompt))
+          return { contract: MICRO_CONTRACTS.alternating };
+        if (/^Clean up the formatting for this song/i.test(prompt))
+          return { contract: MICRO_CONTRACTS.formatOnly };
+        if (/^Rewrite the following song in the .* genre/i.test(prompt))
+          return { contract: MICRO_CONTRACTS.reGenre };
+        return { contract: MICRO_CONTRACTS.alternating };
+      }
+
       async function callOpenRouterAPI(prompt) {
         try {
-          if (!App.Config.openrouterApiKey) {
+          if (!window.CONFIG.openrouterApiKey) {
             throw new Error("Missing OpenRouter API key");
           }
           const controller = new AbortController();
@@ -66,15 +279,21 @@ document.addEventListener("DOMContentLoaded", () => {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${App.Config.openrouterApiKey}`,
+                Authorization: `Bearer ${window.CONFIG.openrouterApiKey}`,
               },
               body: JSON.stringify({
-                model: App.Config.defaultModel || "openrouter/auto",
+                model: window.CONFIG.defaultModel || "openrouter/auto",
+                temperature: 0.4,
                 messages: [
                   {
                     role: "system",
-                    content:
-                      "You are a helpful songwriting assistant. When chords are provided, return chords and lyrics on alternating lines without additional commentary. Label song sections in square brackets (e.g., [Verse 1], [Chorus]).",
+                    content: [
+                      "You are a precise songwriting assistant.",
+                      "Follow the user's format contract exactly and be terse.",
+                      "Never include analysis, chain-of-thought, or commentary.",
+                      "Never use code fences or Markdown headings.",
+                      "When applicable, return chords and lyrics on alternating lines and label sections in square brackets.",
+                    ].join(" "),
                   },
                   { role: "user", content: prompt },
                 ],
@@ -113,9 +332,118 @@ document.addEventListener("DOMContentLoaded", () => {
           return "";
         }
       }
-      const ClipboardManager = App.Utils && App.Utils.ClipboardManager;
-      const { cleanAIOutput, enforceAlternating, normalizeSectionLabels } =
-        App.Utils || {};
+
+      function cleanAIOutput(text) {
+        return text
+          .replace(/\r\n/g, "\n")
+          .replace(
+            /<\/?(think|reasoning|analysis)>[\s\S]*?<\/(think|reasoning|analysis)>/gim,
+            "",
+          )
+          .replace(/```[\s\S]*?```/g, "")
+          .replace(
+            /(^|\n)\s*(analysis|reasoning|thoughts?|notes?|explanation)\s*:\s*[\s\S]*?(\n\s*\n|$)/gim,
+            "$3",
+          )
+          .replace(
+            /^\s*(Sure,|Here(?:'|)s|Of course,|Absolutely,|Let(?:'|)s)\b.*?\n+/gim,
+            "",
+          )
+          .replace(/^#+\s*/gm, "")
+          .replace(/^(Capo|Key|Tempo|Time Signature).*$/gim, "")
+          .replace(/[ \t]+$/gm, "")
+          .replace(/\n{3,}/g, "\n\n")
+          .replace(/^\s+|\s+$/g, "")
+          .replace(/^(Verse|Chorus|Bridge|Outro)[^\n]*$/gim, "[$1]")
+          .trim();
+      }
+
+      function isSectionLabel(line = "") {
+        return /^\s*\[[^\n\]]+\]\s*$/.test(line || "");
+      }
+
+      function isChordToken(tok) {
+        // Allow chord tokens like A, Am, Cmaj7, D/F#, etc., or N/A
+        // Fix: ensure the N/A alternative is inside the same non-capturing group
+        return /^(?:[A-G](?:#|b)?(?:(?:m(?!aj))|maj7|maj9|maj|m7|m9|m11|sus2|sus4|add9|dim7?|aug|\+|°)?(?:\/([A-G](?:#|b)?))?|N\/?A)$/i.test(
+          tok,
+        );
+      }
+
+      function chordConfidence(line = "") {
+        const tokens = (line || "").trim().split(/\s+/).filter(Boolean);
+        if (tokens.length === 0) return 0;
+        let good = 0;
+        for (const t of tokens) if (isChordToken(t)) good++;
+        return good / tokens.length;
+      }
+
+      function isChordLine(line = "") {
+        const l = (line || "").trim();
+        if (!l) return false;
+        if (/^[A-Za-z0-9 ,.'"-]+:$/.test(l)) return false;
+        const conf = chordConfidence(l);
+        if (conf >= 0.6) return true;
+        if (
+          conf >= 0.4 &&
+          !/[a-z]{2,}/.test(
+            l.replace(/maj|sus|dim|aug|add|maj7|maj9|m7|m9|m11/gi, ""),
+          )
+        )
+          return true;
+        return false;
+      }
+
+      function computeLyricsAndChordsFromText(text) {
+        const lines = (text || "").split(/\n/);
+        const lyricsLines = [];
+        const chordLines = [];
+        for (let i = 0; i < lines.length; ) {
+          const line = (lines[i] || "").trimEnd();
+          if (isSectionLabel(line)) {
+            lyricsLines.push(line);
+            i++;
+            continue;
+          }
+          const firstIsChord = isChordLine(line);
+          let chord = "";
+          let lyric = "";
+          if (firstIsChord) {
+            chord = line;
+            const next = (lines[i + 1] || "").trimEnd();
+            if (next && !isSectionLabel(next)) {
+              lyric = next;
+              i += 2;
+            } else {
+              i += 1;
+            }
+          } else {
+            lyric = line;
+            i += 1;
+          }
+          if (lyric !== "") {
+            lyricsLines.push(lyric);
+            chordLines.push(chord);
+          }
+        }
+        return {
+          lyricsText: lyricsLines.join("\n"),
+          chordsText: chordLines.join("\n"),
+        };
+      }
+
+      function enforceAlternating(lines) {
+        const chords = [];
+        const lyrics = [];
+        for (let i = 0; i < lines.length; i++) {
+          if (i % 2 === 0) {
+            chords.push(lines[i] || "");
+          } else {
+            lyrics.push(lines[i] || "");
+          }
+        }
+        return { chords, lyrics };
+      }
 
       const app = {
         // DOM Elements (keeping existing ones and adding new)
@@ -124,6 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "lyrics-editor-container",
         ),
         lyricsDisplay: document.getElementById("lyrics-display"),
+        fontControlsEl: document.getElementById("font-controls"),
         decreaseFontBtn: document.getElementById("font-decrease"),
         increaseFontBtn: document.getElementById("font-increase"),
         fontSizeDisplay: document.getElementById("font-size-display"),
@@ -160,9 +489,8 @@ document.addEventListener("DOMContentLoaded", () => {
         minFontSize: 8,
         maxFontSize: 72,
         fontSizeStep: 1,
-        perSongFontSizes: safeParse(
-          localStorage.getItem("perSongFontSizes"),
-          {},
+        perSongFontSizes: JSON.parse(
+          localStorage.getItem("perSongFontSizes") || "{}",
         ),
         isReadOnly: false,
         isChordsVisible: true,
@@ -182,6 +510,8 @@ document.addEventListener("DOMContentLoaded", () => {
         sectionMenuTarget: null,
         sectionSortable: null,
         lastSnapshotTime: 0,
+        pendingAI: null,
+        pendingAIRange: null,
 
         syllableCount(word) {
           word = word.toLowerCase();
@@ -194,6 +524,9 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         async init() {
+          try {
+            await window.StorageSafe?.init?.();
+          } catch {}
           await this.loadData();
           this.loadAISettings();
           this.setupEventListeners();
@@ -209,25 +542,129 @@ document.addEventListener("DOMContentLoaded", () => {
             this.rhymeModeToggle.checked = this.isRhymeMode;
           }
           this.displayCurrentEditorSong();
+          this.initFontControlsMobile();
           window.addEventListener("beforeunload", (e) => {
-            if (this.hasUnsavedChanges) {
+            // If song is blank, delete it silently on unload
+            if (this.currentSong && this.isSongBlank(this.currentSong)) {
+              this.deleteSongById(this.currentSong.id);
+            } else if (this.hasUnsavedChanges) {
               e.preventDefault();
               e.returnValue = "";
             }
           });
 
           this.setupResizeObserver();
-          // Preserve default visibility when config flag is undefined
-          if (
-            App.Config &&
-            Object.prototype.hasOwnProperty.call(
-              App.Config,
-              "chordsModeEnabled",
-            )
-          ) {
-            this.isChordsVisible = !!App.Config.chordsModeEnabled;
-          }
+          this.isChordsVisible = window.CONFIG.chordsModeEnabled;
           this.updateChordsVisibility();
+          // Re-init floating controls on orientation/resize
+          window.addEventListener(
+            "resize",
+            debounce(() => this.initFontControlsMobile(), 200),
+          );
+        },
+
+        initFontControlsMobile() {
+          const isMobile = window.innerWidth <= 800;
+          if (!this.fontControlsEl) return;
+          if (!isMobile) {
+            this.fontControlsEl.classList.add("visible");
+            if (this.fontFab && this.fontFab.parentNode)
+              this.fontFab.parentNode.removeChild(this.fontFab);
+            this.fontFab = null;
+            this.clearFontControlsHideTimer?.();
+            return;
+          }
+          // On mobile: keep hidden until user taps FAB
+          this.fontControlsEl.classList.remove("visible");
+          if (!this.fontFab) {
+            const btn = document.createElement("button");
+            btn.className = "font-fab";
+            btn.title = "Font controls";
+            btn.innerHTML = '<i class="fas fa-text-height"></i>';
+            document.body.appendChild(btn);
+            btn.addEventListener("click", () => this.showFontControls());
+            this.fontFab = btn;
+          }
+          // Hide when clicking outside controls
+          if (!this._fontOutsideHandler) {
+            this._fontOutsideHandler = (e) => {
+              if (!this.fontControlsEl.classList.contains("visible")) return;
+              if (this.fontControlsEl.contains(e.target)) return;
+              if (this.fontFab && this.fontFab.contains(e.target)) return;
+              this.hideFontControls();
+            };
+            document.addEventListener("click", this._fontOutsideHandler);
+          }
+          // Keep visible on interaction
+          const reset = () => this.resetFontControlsHideTimer();
+          this.fontControlsEl.addEventListener("mousemove", reset);
+          this.fontControlsEl.addEventListener("touchstart", reset, {
+            passive: true,
+          });
+        },
+
+        showFontControls() {
+          if (!this.fontControlsEl) return;
+          this.fontControlsEl.classList.add("visible");
+          if (this.fontFab) this.fontFab.classList.add("hidden");
+          this.resetFontControlsHideTimer();
+        },
+
+        hideFontControls() {
+          if (!this.fontControlsEl) return;
+          this.fontControlsEl.classList.remove("visible");
+          if (this.fontFab) this.fontFab.classList.remove("hidden");
+          this.clearFontControlsHideTimer();
+        },
+
+        resetFontControlsHideTimer() {
+          this.clearFontControlsHideTimer();
+          this._fontControlsTimer = setTimeout(
+            () => this.hideFontControls(),
+            4000,
+          );
+        },
+
+        clearFontControlsHideTimer() {
+          if (this._fontControlsTimer) {
+            clearTimeout(this._fontControlsTimer);
+            this._fontControlsTimer = null;
+          }
+        },
+
+        // Consider a song "blank" if it's still the default template with no chords/notes/tags
+        isSongBlank(song) {
+          if (!song) return false;
+          const titleIsDefault =
+            (song.title || "").trim().toLowerCase() === "new song";
+          const defaultNorm = this.normalizeSectionLabels(
+            this.defaultSections,
+          ).trim();
+          const lyricsNorm = this.normalizeSectionLabels(
+            song.lyrics || "",
+          ).trim();
+          const hasOnlyDefaultLyrics = lyricsNorm === defaultNorm;
+          const chordsEmpty = !(song.chords || "").trim();
+          const notesEmpty = !(song.notes || "").trim();
+          const noTags = !Array.isArray(song.tags) || song.tags.length === 0;
+          return (
+            titleIsDefault &&
+            hasOnlyDefaultLyrics &&
+            chordsEmpty &&
+            notesEmpty &&
+            noTags
+          );
+        },
+
+        deleteSongById(id) {
+          const idx = this.songs.findIndex((s) => String(s.id) === String(id));
+          if (idx !== -1) {
+            this.songs.splice(idx, 1);
+            try {
+              localStorage.setItem("songs", JSON.stringify(this.songs));
+              window.StorageSafe?.snapshotLater?.("editor:delete");
+            } catch {}
+          }
         },
 
         showSaveStatus(state = "saved") {
@@ -276,40 +713,49 @@ document.addEventListener("DOMContentLoaded", () => {
           try {
             await window.StorageSafe?.init?.();
           } catch {}
-          this.songs = safeParse(
-            localStorage.getItem(App.Config.STORAGE.SONGS),
-            [],
-          );
-          // Ensure unique IDs even when landing directly on editor page
-          try {
-            const rawSet =
-              localStorage.getItem(App.Config.STORAGE.SETLISTS) || "[]";
-            const setlists = safeParse(rawSet, []);
-            const result = App.Utils.ensureUniqueIds(this.songs, setlists);
-            if (result.changed > 0) {
-              this.songs = result.songs;
-              localStorage.setItem(
-                App.Config.STORAGE.SONGS,
-                JSON.stringify(result.songs),
-              );
-              localStorage.setItem(
-                App.Config.STORAGE.SETLISTS,
-                JSON.stringify(result.setlists),
-              );
-            }
-          } catch {}
+          this.songs = JSON.parse(localStorage.getItem("songs")) || [];
           const theme = localStorage.getItem("theme") || "dark";
           document.documentElement.dataset.theme = theme;
           setThemeColorMeta(theme);
+          // Ensure IDs are unique and remember any remaps
+          this.ensureUniqueIds();
         },
 
+        generateId() {
+          return (
+            Date.now().toString(36) +
+            "-" +
+            Math.random().toString(36).slice(2, 10)
+          );
+        },
+
+        ensureUniqueIds() {
+          const seen = new Set();
+          const remap = {};
+          let changed = false;
+          this.songs.forEach((song) => {
+            let id = String(song.id || "");
+            if (!id || seen.has(id)) {
+              const old = id;
+              id = this.generateId();
+              song.id = id;
+              if (old) remap[old] = id;
+              changed = true;
+            }
+            seen.add(id);
+          });
+          if (changed) {
+            this.safeLocalStorageSet("songs", JSON.stringify(this.songs));
+          }
+          this.idRemap = remap;
+        },
         // Enhanced song creation with metadata
         createSong(title, lyrics = "", chords = "") {
           const normalizedLyrics = lyrics.trim()
-            ? normalizeSectionLabels(lyrics)
+            ? this.normalizeSectionLabels(lyrics)
             : this.defaultSections;
           return {
-            id: App.Utils.genId(),
+            id: this.generateId(),
             title,
             lyrics: normalizedLyrics,
             chords,
@@ -321,6 +767,46 @@ document.addEventListener("DOMContentLoaded", () => {
             lastEditedAt: new Date().toISOString(),
             tags: [],
           };
+        },
+
+        normalizeSectionLabels(text = "") {
+          const sectionKeywords = [
+            "intro",
+            "verse",
+            "prechorus",
+            "chorus",
+            "bridge",
+            "outro",
+            "hook",
+            "refrain",
+            "coda",
+            "solo",
+            "interlude",
+            "ending",
+            "breakdown",
+            "tag",
+          ];
+          return text
+            .split(/\r?\n/)
+            .map((line) => {
+              const trimmed = line.trim();
+              if (!trimmed) return line;
+              const match = trimmed.match(
+                /^[\*\s\-_=~`]*[\(\[\{]?\s*([^\]\)\}]+?)\s*[\)\]\}]?[\*\s\-_=~`]*:?$/,
+              );
+              if (match) {
+                const label = match[1].trim();
+                const normalized = label.toLowerCase().replace(/[^a-z]/g, "");
+                if (sectionKeywords.some((k) => normalized.startsWith(k))) {
+                  const formatted = label
+                    .replace(/\s+/g, " ")
+                    .replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+                  return `[${formatted}]`;
+                }
+              }
+              return line;
+            })
+            .join("\n");
         },
 
         trimExtraEmptyLines(text = "") {
@@ -412,12 +898,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         setupEventListeners() {
           // Existing event listeners
-          this.decreaseFontBtn?.addEventListener("click", () =>
-            this.adjustFontSize(-this.fontSizeStep),
-          );
-          this.increaseFontBtn?.addEventListener("click", () =>
-            this.adjustFontSize(this.fontSizeStep),
-          );
+          this.decreaseFontBtn?.addEventListener("click", () => {
+            this.adjustFontSize(-this.fontSizeStep);
+            this.resetFontControlsHideTimer?.();
+          });
+          this.increaseFontBtn?.addEventListener("click", () => {
+            this.adjustFontSize(this.fontSizeStep);
+            this.resetFontControlsHideTimer?.();
+          });
           this.toggleThemeBtn?.addEventListener("click", () =>
             this.toggleTheme(),
           );
@@ -433,6 +921,13 @@ document.addEventListener("DOMContentLoaded", () => {
           this.scrollToTopBtn?.addEventListener("click", () =>
             this.scrollToTop(),
           );
+          this.lyricsEditorContainer?.addEventListener("scroll", () => {
+            if (this.lyricsEditorContainer.scrollTop > 200) {
+              this.scrollToTopBtn?.classList.add("visible");
+            } else {
+              this.scrollToTopBtn?.classList.remove("visible");
+            }
+          });
           // Handle modal items
           document
             .getElementById("toggle-chords-btn")
@@ -547,6 +1042,16 @@ document.addEventListener("DOMContentLoaded", () => {
           this.aiSettingsClose?.addEventListener("click", () => {
             this.aiSettingsPanel.style.display = "none";
           });
+          // AI Review modal buttons
+          document
+            .getElementById("ai-accept-btn")
+            ?.addEventListener("click", () => this.acceptAI());
+          document
+            .getElementById("ai-reject-btn")
+            ?.addEventListener("click", () => this.rejectAI());
+          document
+            .querySelector("#ai-review-modal .close-modal-btn")
+            ?.addEventListener("click", () => this.hideAIReview());
           this.saveAISettingsBtn?.addEventListener("click", () =>
             this.saveAISettings(),
           );
@@ -685,11 +1190,11 @@ document.addEventListener("DOMContentLoaded", () => {
         loadAISettings() {
           const key = localStorage.getItem("openrouterApiKey") || "";
           const model = localStorage.getItem("openrouterModel") || "";
-          App.Config = App.Config || {};
-          if (typeof App.Config.autosaveEnabled === "undefined")
-            App.Config.autosaveEnabled = true;
-          App.Config.openrouterApiKey = key;
-          App.Config.defaultModel = model;
+          window.CONFIG = window.CONFIG || {};
+          if (typeof window.CONFIG.autosaveEnabled === "undefined")
+            window.CONFIG.autosaveEnabled = true;
+          window.CONFIG.openrouterApiKey = key;
+          window.CONFIG.defaultModel = model;
           this.selectedModel = model;
           if (this.apiKeyInput) this.apiKeyInput.value = key;
         },
@@ -707,8 +1212,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         saveAISettings() {
           const key = this.apiKeyInput?.value.trim() || "";
-          App.Config.openrouterApiKey = key;
-          App.Config.defaultModel = this.selectedModel;
+          window.CONFIG.openrouterApiKey = key;
+          window.CONFIG.defaultModel = this.selectedModel;
           localStorage.setItem("openrouterApiKey", key);
           localStorage.setItem("openrouterModel", this.selectedModel);
           this.aiSettingsPanel.style.display = "none";
@@ -738,7 +1243,7 @@ document.addEventListener("DOMContentLoaded", () => {
               item.textContent = m.id;
               item.addEventListener("click", () => {
                 this.selectedModel = m.id;
-                App.Config.defaultModel = m.id;
+                window.CONFIG.defaultModel = m.id;
                 localStorage.setItem("openrouterModel", m.id);
                 this.renderModelList(term);
               });
@@ -854,56 +1359,224 @@ document.addEventListener("DOMContentLoaded", () => {
             continue: `Continue the lyrics after: ${selectedText}. Include chord suggestions and return chords and lyrics on alternating lines, labeling sections in square brackets.`,
           };
           const prompt = prompts[action];
-          if (!App.Config.openrouterApiKey) {
+          if (!window.CONFIG.openrouterApiKey) {
             console.warn("OpenRouter API key not set");
             alert("Please set your OpenRouter API key in AI Settings.");
             return;
           }
+          // Preserve current selection range for accept stage
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+            this.pendingAIRange = sel.getRangeAt(0).cloneRange();
+          } else {
+            this.pendingAIRange = null;
+          }
+          // Track action type so acceptAI can apply correct behavior
+          this.pendingAIType = action;
           this.callOpenRouter(prompt);
         },
 
         async callOpenRouter(prompt, append = false) {
           const notes = this.additionalNotesInput?.value.trim();
-          const fullPrompt = notes
-            ? `${prompt}\nAdditional notes: ${notes}`
-            : prompt;
-          const response = await callOpenRouterAPI(fullPrompt);
-          if (!response) return;
+          const { rhyme, contract: micro } = chooseMicroContract(prompt);
+          const base = rhyme
+            ? AI_RHYME_CONTRACT
+            : [AI_OUTPUT_CONTRACT, micro].filter(Boolean).join(" ");
+          const fullPrompt = [
+            base,
+            prompt,
+            notes ? `Additional notes: ${notes}` : "",
+          ]
+            .filter(Boolean)
+            .join("\n");
+          try {
+            this.showAILoading(true);
+            const response = await callOpenRouterAPI(fullPrompt);
+            this.showAILoading(false);
+            if (!response) return;
 
-          // Handle context menu actions based on prompt
-          if (fullPrompt.startsWith("Find rhymes for:")) {
-            ClipboardManager.showToast(response, "info");
+            // Rhymes are informational; show as persistent toast until dismissed
+            if (rhyme) {
+              ClipboardManager.showToast(cleanAIOutput(response), "info", 0);
+              return;
+            }
+
+            // Defer application until user accepts
+            this.pendingAI = { response, append, prompt: fullPrompt };
+            this.showAIReview(cleanAIOutput(response));
+          } catch (e) {
+            this.showAILoading(false);
+            throw e;
+          }
+        },
+
+        showAILoading(visible) {
+          const overlay = document.getElementById("ai-loading-overlay");
+          if (!overlay) return;
+          overlay.style.display = visible ? "flex" : "none";
+        },
+
+        showAIReview(text) {
+          const modal = document.getElementById("ai-review-modal");
+          const pre = document.getElementById("ai-review-text");
+          if (!modal || !pre) return;
+          pre.textContent = text;
+          modal.style.display = "flex";
+          setTimeout(() => modal.classList.add("visible"), 10);
+        },
+
+        hideAIReview() {
+          const modal = document.getElementById("ai-review-modal");
+          if (!modal) return;
+          modal.classList.remove("visible");
+          setTimeout(() => {
+            modal.style.display = "none";
+          }, 150);
+        },
+
+        acceptAI() {
+          if (!this.pendingAI) {
+            this.hideAIReview();
             return;
           }
+          const { response, append, prompt } = this.pendingAI;
+          const cleaned = cleanAIOutput(response);
+          const ctx = chooseMicroContract(prompt);
 
-          const selection = window.getSelection();
+          // Handle selection-based actions
           if (
-            fullPrompt.startsWith("Suggest alternative wording") ||
-            fullPrompt.startsWith("Rewrite this line")
+            this.pendingAIType === "reword" ||
+            this.pendingAIType === "rewrite" ||
+            /^Suggest alternative wording/i.test(prompt) ||
+            /^Rewrite this line/i.test(prompt)
           ) {
-            if (selection && !selection.isCollapsed) {
-              const range = selection.getRangeAt(0);
-              range.deleteContents();
-              range.insertNode(document.createTextNode(response));
-              selection.removeAllRanges();
-              this.saveCurrentSong(true);
+            const sel = window.getSelection();
+            const range =
+              this.pendingAIRange &&
+              (sel?.rangeCount ? sel.getRangeAt(0) : null)
+                ? sel.getRangeAt(0)
+                : this.pendingAIRange;
+            if (range) {
+              try {
+                const selectionText = this.pendingAIRange?.toString?.() || "";
+                const selLineCount =
+                  (selectionText.match(/\n/g) || []).length + 1;
+                const normalized = cleaned
+                  .replace(/\n{2,}/g, "\n")
+                  .split(/\n/)
+                  .slice(0, Math.max(1, selLineCount))
+                  .join("\n")
+                  .replace(/^\s*\[[^\]]+\]\s*$/gm, "")
+                  .replace(/^\s+|\s+$/g, "");
+                range.deleteContents();
+                range.insertNode(document.createTextNode(normalized));
+                sel?.removeAllRanges();
+                // Update counts/colors since we didn't trigger input event
+                this.updateSyllableCount();
+                this.updateRhymes();
+                this.saveCurrentSong(true);
+              } catch {}
             }
+            this.pendingAIRange = null;
+            this.pendingAI = null;
+            this.pendingAIType = null;
+            this.hideAIReview();
             return;
           }
 
-          if (fullPrompt.startsWith("Continue the lyrics after:")) {
-            if (selection && !selection.isCollapsed) {
-              const range = selection.getRangeAt(0);
-              range.collapse(false);
-              range.insertNode(document.createTextNode("\n" + response));
-              selection.removeAllRanges();
-              this.saveCurrentSong(true);
+          if (/^Continue the (song|lyrics) after:/i.test(prompt)) {
+            const normalized = computeLyricsAndChordsFromText(cleaned);
+            if (!this.currentSong) {
+              this.hideAIReview();
+              return;
             }
+            this.currentSong.lyrics = [
+              this.currentSong.lyrics,
+              this.normalizeSectionLabels(normalized.lyricsText),
+            ]
+              .filter(Boolean)
+              .join("\n");
+            this.currentSong.chords = [
+              this.currentSong.chords,
+              normalized.chordsText,
+            ]
+              .filter(Boolean)
+              .join("\n");
+            this.renderLyrics();
+            this.saveCurrentSong(true);
+            ClipboardManager.showToast("Lyrics continued", "success");
+            this.pendingAIRange = null;
+            this.pendingAI = null;
+            this.pendingAIType = null;
+            this.hideAIReview();
             return;
           }
 
-          // For AI tools or when no selection, apply to entire song
-          this.applyAIResult(response, append);
+          // Suggest chords -> align to current lyrics; do not change lyrics
+          if (/^Suggest chord progressions/i.test(prompt)) {
+            if (!this.currentSong) {
+              this.hideAIReview();
+              return;
+            }
+            const { lyricsText, chordsText } =
+              computeLyricsAndChordsFromText(cleaned);
+            const aiChords = chordsText.split(/\n/);
+            const lyricLines = (this.currentSong.lyrics || "").split(/\n/);
+            const outChords = [];
+            let idx = 0;
+            for (const line of lyricLines) {
+              if (isSectionLabel(line)) {
+                outChords.push("");
+                continue;
+              }
+              outChords.push(aiChords[idx] || "");
+              if (aiChords[idx] !== undefined) idx++;
+            }
+            this.currentSong.chords = outChords.join("\n");
+            this.renderLyrics();
+            this.saveCurrentSong(true);
+            ClipboardManager.showToast("Chords suggested", "success");
+            this.pendingAI = null;
+            this.pendingAIType = null;
+            this.hideAIReview();
+            return;
+          }
+
+          // Default: apply to full song (tools/modals)
+          const normalized = computeLyricsAndChordsFromText(cleaned);
+          if (append) {
+            this.currentSong.lyrics = [
+              this.currentSong.lyrics,
+              this.normalizeSectionLabels(normalized.lyricsText),
+            ]
+              .filter(Boolean)
+              .join("\n");
+            this.currentSong.chords = [
+              this.currentSong.chords,
+              normalized.chordsText,
+            ]
+              .filter(Boolean)
+              .join("\n");
+          } else {
+            this.currentSong.lyrics = this.normalizeSectionLabels(
+              normalized.lyricsText,
+            );
+            this.currentSong.chords = normalized.chordsText;
+          }
+          this.renderLyrics();
+          this.saveCurrentSong(true);
+          ClipboardManager.showToast("AI update applied", "success");
+          this.pendingAI = null;
+          this.pendingAIRange = null;
+          this.pendingAIType = null;
+          this.hideAIReview();
+        },
+
+        rejectAI() {
+          this.pendingAI = null;
+          this.pendingAIRange = null;
+          this.pendingAIType = null;
+          this.hideAIReview();
         },
 
         async invokeAIFormat() {
@@ -915,12 +1588,7 @@ document.addEventListener("DOMContentLoaded", () => {
               song.chords || "",
             );
             let prompt = `Clean up the formatting for this song and return chords and lyrics on alternating lines with section labels in square brackets.\nTitle: ${song.title}\nKey: ${song.key}\nTempo: ${song.tempo}\nTime Signature: ${song.timeSignature}\n\n${formatted}`;
-            const notes = this.additionalNotesInput?.value.trim();
-            if (notes) prompt += `\nAdditional notes: ${notes}`;
-            const response = await callOpenRouterAPI(prompt);
-            if (response) {
-              this.applyAIResult(response, false, "AI formatting applied!");
-            }
+            this.callOpenRouter(prompt, false);
           } catch (err) {
             console.error("AI format error", err);
           }
@@ -936,12 +1604,7 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             const tags = song.tags?.length ? song.tags.join(", ") : "";
             let prompt = `Rewrite the following song in the ${newGenre} genre while preserving meaning and structure. Return chords and lyrics on alternating lines with section labels in square brackets.\nTitle: ${song.title}\nKey: ${song.key}\nTempo: ${song.tempo}\nTags: ${tags}\n\n${formatted}`;
-            const notes = this.additionalNotesInput?.value.trim();
-            if (notes) prompt += `\nAdditional notes: ${notes}`;
-            const response = await callOpenRouterAPI(prompt);
-            if (response) {
-              this.applyAIResult(response, false, `Re-genred as ${newGenre}`);
-            }
+            this.callOpenRouter(prompt, false);
           } catch (err) {
             console.error("Re-genre error", err);
           }
@@ -954,23 +1617,20 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
           if (!this.currentSong) return;
           const cleaned = cleanAIOutput(responseText);
-          const lines = cleaned.split(/\n/);
-          const { chords, lyrics } = enforceAlternating(lines);
-          const lyricsText = normalizeSectionLabels(lyrics.join("\n"));
-          const chordsText = chords.join("\n");
-
+          const { lyricsText, chordsText } =
+            computeLyricsAndChordsFromText(cleaned);
+          const finalLyrics = this.normalizeSectionLabels(lyricsText);
           if (append) {
-            this.currentSong.lyrics = [this.currentSong.lyrics, lyricsText]
+            this.currentSong.lyrics = [this.currentSong.lyrics, finalLyrics]
               .filter(Boolean)
               .join("\n");
             this.currentSong.chords = [this.currentSong.chords, chordsText]
               .filter(Boolean)
               .join("\n");
           } else {
-            this.currentSong.lyrics = lyricsText;
+            this.currentSong.lyrics = finalLyrics;
             this.currentSong.chords = chordsText;
           }
-
           this.renderLyrics();
           this.saveCurrentSong(true);
           ClipboardManager.showToast(toastMessage, "success");
@@ -978,39 +1638,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
         loadEditorState() {
           const params = new URLSearchParams(window.location.search);
-          const isNew = params.get("new") === "1";
           const songId = params.get("songId");
           this.editorSongs = this.songs;
 
-          if (isNew) {
-            this.currentEditorSongIndex = -1;
-            this.currentSong = this.createSong("");
-          } else if (songId) {
-            this.currentEditorSongIndex = this.editorSongs.findIndex(
-              (s) => String(s.id) === String(songId),
+          // Primary: by explicit query param
+          let index = -1;
+          if (songId) {
+            const targetId = String(songId);
+            index = this.editorSongs.findIndex(
+              (s) => String(s.id) === targetId,
             );
-            if (this.currentEditorSongIndex !== -1) {
-              this.currentSong = this.editorSongs[this.currentEditorSongIndex];
-            } else {
-              // Fallback: if songs exist, open the first one; otherwise create a new song
-              if (this.editorSongs && this.editorSongs.length > 0) {
-                this.currentEditorSongIndex = 0;
-                this.currentSong = this.editorSongs[0];
-              } else {
-                this.currentEditorSongIndex = -1;
-                this.currentSong = this.createSong("");
-              }
-            }
-          } else {
-            // No songId provided: open first song if available, else create new
-            if (this.editorSongs && this.editorSongs.length > 0) {
-              this.currentEditorSongIndex = 0;
-              this.currentSong = this.editorSongs[0];
-            } else {
-              this.currentEditorSongIndex = -1;
-              this.currentSong = this.createSong("");
-            }
           }
+
+          // Fallback: use lastSongId from sessionStorage if provided
+          if (index === -1) {
+            try {
+              const lastId = sessionStorage.getItem("lastSongId");
+              if (lastId) {
+                const fallbackIndex = this.editorSongs.findIndex(
+                  (s) => String(s.id) === String(lastId),
+                );
+                if (fallbackIndex !== -1) index = fallbackIndex;
+              }
+            } catch {}
+          }
+
+          // Final fallback: first song
+          this.currentEditorSongIndex = index !== -1 ? index : 0;
         },
 
         updateSongMetadata() {
@@ -1067,7 +1721,10 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         saveCurrentSong(isExplicit = false) {
-          if (!this.currentSong || (!App.Config.autosaveEnabled && !isExplicit))
+          if (
+            !this.currentSong ||
+            (!window.CONFIG.autosaveEnabled && !isExplicit)
+          )
             return;
           this.showSaveStatus("saving");
           try {
@@ -1093,31 +1750,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const lyrics = this.trimExtraEmptyLines(lyricLines.join("\n"));
             const chords = this.trimExtraEmptyLines(chordLines.join("\n"));
 
-            const titleTrim = (this.currentSong.title || "").trim();
-            const lyricsTrim = lyrics.trim();
-            const chordsTrim = chords.trim();
-            const isDefaultLyrics = lyricsTrim === this.defaultSections.trim();
-            const isBlank =
-              !titleTrim &&
-              !chordsTrim &&
-              (lyricsTrim === "" || isDefaultLyrics);
-            if (isBlank) {
-              const idx = this.songs.findIndex(
-                (s) => s.id === this.currentSong.id,
-              );
-              if (idx !== -1) {
-                this.songs.splice(idx, 1);
-                this.safeLocalStorageSet(
-                  App.Config.STORAGE.SONGS,
-                  JSON.stringify(this.songs),
-                );
-              }
-              this.hasUnsavedChanges = false;
-              this.showSaveStatus("saved");
-              return;
-            }
-
-            this.currentSong.lyrics = normalizeSectionLabels(lyrics);
+            this.currentSong.lyrics = this.normalizeSectionLabels(lyrics);
             this.currentSong.chords = chords;
             this.currentSong.lastEditedAt = new Date().toISOString();
             const editedText = new Date(
@@ -1133,14 +1766,9 @@ document.addEventListener("DOMContentLoaded", () => {
             );
             if (songIndex !== -1) {
               this.songs[songIndex] = this.currentSong;
-            } else {
-              this.songs.push(this.currentSong);
-              this.currentEditorSongIndex = this.songs.findIndex(
-                (s) => s.id === this.currentSong.id,
-              );
             }
             const ok = this.safeLocalStorageSet(
-              App.Config.STORAGE.SONGS,
+              "songs",
               JSON.stringify(this.songs),
             );
             if (ok) {
@@ -1156,11 +1784,8 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         displayCurrentEditorSong() {
-          if (this.currentEditorSongIndex === -1) {
-            this.currentSong = this.currentSong || this.createSong("");
-          } else {
-            this.currentSong = this.editorSongs[this.currentEditorSongIndex];
-          }
+          if (this.currentEditorSongIndex === -1) return;
+          this.currentSong = this.editorSongs[this.currentEditorSongIndex];
 
           // Ensure song has all metadata fields
           if (!this.currentSong.key) this.currentSong.key = "";
@@ -1209,7 +1834,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (headerEdited) headerEdited.textContent = editedText;
           if (metaEdited) metaEdited.textContent = editedText;
 
-          this.currentSong.lyrics = normalizeSectionLabels(
+          this.currentSong.lyrics = this.normalizeSectionLabels(
             this.currentSong.lyrics || "",
           );
 
@@ -1234,9 +1859,12 @@ document.addEventListener("DOMContentLoaded", () => {
           const stored = localStorage.getItem(
             `undoStack_${this.currentSong.id}`,
           );
-          const parsed = safeParse(stored, null);
-          if (parsed) {
-            this.undoStack = parsed.slice(-20);
+          if (stored) {
+            try {
+              this.undoStack = JSON.parse(stored).slice(-20);
+            } catch {
+              this.undoStack = [this.getSongState()];
+            }
           } else {
             this.undoStack = [this.getSongState()];
           }
@@ -1374,6 +2002,30 @@ document.addEventListener("DOMContentLoaded", () => {
           this.updateChordsVisibility();
           this.updateSyllableCount();
           this.autoNumberVerses();
+          this.ensureTrailingBlankDomLine();
+        },
+
+        ensureTrailingBlankDomLine() {
+          // Determine the container to add the trailing blank: prefer last section's content
+          let container = this.lyricsDisplay;
+          const sections = this.lyricsDisplay.querySelectorAll(".section");
+          if (sections.length > 0) {
+            const lastSection = sections[sections.length - 1];
+            const content = lastSection.querySelector(".section-content");
+            if (content) container = content;
+          }
+
+          // Find last line group inside chosen container
+          const groups = container.querySelectorAll(".lyrics-line-group");
+          const lastGroup = groups[groups.length - 1] || null;
+          const lastLyric =
+            lastGroup?.querySelector(".lyric-text")?.textContent?.trim() || "";
+          const lastChord =
+            lastGroup?.querySelector(".chord-line")?.textContent?.trim() || "";
+          const needBlank = !lastGroup || lastLyric !== "" || lastChord !== "";
+          if (needBlank) {
+            this.addLyricLine("", "", null, 0, container, null);
+          }
         },
 
         insertSectionAtCursor(label) {
@@ -1686,15 +2338,48 @@ document.addEventListener("DOMContentLoaded", () => {
           this.trimDomEmptyLines();
           this.convertBracketSections();
           this.autoNumberVerses();
+          this.ensureTrailingBlankDomLine();
           this.debouncedSaveCurrentSong && this.debouncedSaveCurrentSong();
         },
 
         handleLyricsClick(e) {
+          // If the user tapped inside existing editable areas, keep default behavior
           if (
-            e.target.classList.contains("lyrics-line") ||
-            e.target.classList.contains("chord-line")
+            e.target.closest(".lyric-text, .chord-line, .section-label-text")
           ) {
-            // Keep the cursor where it is
+            return;
+          }
+
+          // Otherwise, ensure there is a trailing blank line and focus it for quick entry
+          this.ensureTrailingBlankDomLine();
+          // Prefer focusing the last lyric line within the last section if present
+          let container = this.lyricsDisplay;
+          const sections = this.lyricsDisplay.querySelectorAll(".section");
+          if (sections.length > 0) {
+            const lastSection = sections[sections.length - 1];
+            const content = lastSection.querySelector(".section-content");
+            if (content) container = content;
+          }
+          const lastText = container.querySelector(
+            ".lyrics-line-group:last-child .lyric-text",
+          );
+          if (lastText) {
+            lastText.focus();
+            try {
+              const sel = window.getSelection();
+              const range = document.createRange();
+              // Place caret at end of the contenteditable span
+              const endNode =
+                lastText.childNodes[lastText.childNodes.length - 1] || lastText;
+              const endOffset =
+                endNode.nodeType === Node.TEXT_NODE
+                  ? endNode.textContent.length
+                  : endNode.childNodes.length;
+              range.setStart(endNode, Math.max(0, endOffset));
+              range.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(range);
+            } catch {}
           }
         },
 
@@ -1752,7 +2437,10 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         exitEditorMode() {
-          if (this.hasUnsavedChanges) {
+          // If the current song is just a blank template, discard it instead of saving
+          if (this.currentSong && this.isSongBlank(this.currentSong)) {
+            this.deleteSongById(this.currentSong.id);
+          } else if (this.hasUnsavedChanges) {
             if (
               confirm(
                 "You have unsaved changes. Are you sure you want to exit?",
@@ -1764,8 +2452,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
           if (this.resizeObserver) this.resizeObserver.disconnect();
-          // Return to main app; Editor tab removed, go to Songs
-          window.location.href = "../index.html#songs";
+          window.location.href = "../index.html";
         },
 
         scrollToTop() {
